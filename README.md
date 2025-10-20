@@ -37,47 +37,40 @@ O projeto segue uma arquitetura orientada a features (feature-based). Em vez de 
 
 Isso torna o projeto mais modular, fácil de navegar e de dar manutenção.
 
-``` json
+```
 |-- /cypress/              # Testes End-to-End (E2E) (se aplicável)
 |-- /src/
-|   |
-|   |-- /api/              # Configuração global do Axios, instâncias e interceptors.
 |   |-- /assets/           # Imagens, fontes, SVGs estáticos.
-|   |-- /components/       # Componentes de UI 100% genéricos (Button,      Modal, Input).
-|   |-- /config/           # Constantes e configuração de .env.
-|   |-- /hooks/            # Hooks customizados genéricos (ex: useDebounce).
 |   |-- /lib/              # Configuração de libs (tailwind, zod, etc.).
-|   |-- /providers/        # Provedores React (Auth, QueryClient, Router).
-|   |-- /routes/           # Configuração central das rotas (Rotas públicas e privadas).
-|   |-- /store/            # Stores globais do Zustand (ex: useAuthStore).
-|   |
-|   |-- /features/         # <-- CORAÇÃO DA ARQUITETURA
-|   |   |
-|   |   |-- /auth/         # Domínio: Autenticação
-|   |   |   |-- /components/ # Componentes específicos de Auth (LoginForm)
-|   |   |   |-- /pages/      # Telas (LoginPage, RegisterPage)
-|   |   |   |-- /api/        # Chamadas de API (authApi.ts)
-|   |   |   |-- /hooks/      # Hooks (useAuth.ts)
-|   |   |   |-- types.ts     # Tipos TypeScript do domínio
-|   |   |
-|   |   |-- /products/     # Domínio: Produtos
-|   |   |   |-- /components/ # ProductList, ProductForm, Stepper, SummaryCard
-|   |   |   |-- /pages/      # ProductListPage, ProductCreatePage
-|   |   |   |-- /api/        # productsApi.ts
-|   |   |   |-- /hooks/      # useProducts.ts (contém a lógica do TanStack Query)
-|   |   |   |-- types.ts
-|   |   |
-|   |   |-- /inventory/    # Domínio: Estoque
-|   |   |   |-- /components/ # StockMovementForm, HistoryTable
-|   |   |   |-- ...etc
-|   |   |
-|   |   |-- /dashboard/    # Domínio: Dashboard
-|   |   |   |-- /components/ # KpiCard, RecentAlertsWidget
-|   |   |   |-- /pages/      # DashboardPage
-|   |
+|   |-- /app/
+|   |   |-- /api/              # Configuração global do Axios, instâncias e interceptors.
+|   |   |-- /components/       # Componentes de UI 100% genéricos (Button,      Modal, Input).
+|   |   |-- /config/           # Constantes e configuração de .env.
+|   |   |-- /hooks/            # Hooks customizados genéricos (ex: useDebounce).
+|   |   |-- /providers/        # Provedores React (Auth, QueryClient, Router).
+|   |   |-- /routes/           # Configuração central das rotas (Rotas públicas e privadas).
+|   |   |-- /store/            # Stores globais do Zustand (ex: useAuthStore).
+|   |   |-- /features/         # <-- CORAÇÃO DA ARQUITETURA
+|   |   |   |-- /auth/         # Domínio: Autenticação
+|   |   |   |   |-- /components/ # Componentes específicos de Auth (LoginForm)
+|   |   |   |   |-- /pages/      # Telas (LoginPage, RegisterPage)
+|   |   |   |   |-- /api/        # Chamadas de API (authApi.ts)
+|   |   |   |   |-- /hooks/      # Hooks (useAuth.ts)
+|   |   |   |   |-- types.ts     # Tipos TypeScript do domínio
+|   |   |   |-- /products/     # Domínio: Produtos
+|   |   |   |   |-- /components/ # ProductList, ProductForm, Stepper, SummaryCard
+|   |   |   |   |-- /pages/      # ProductListPage, ProductCreatePage
+|   |   |   |   |-- /api/        # productsApi.ts
+|   |   |   |   |-- /hooks/      # useProducts.ts (contém a lógica do TanStack Query)
+|   |   |   |   |-- types.ts
+|   |   |   |-- /inventory/    # Domínio: Estoque
+|   |   |   |   |-- /components/ # StockMovementForm, HistoryTable
+|   |   |   |   |-- ...etc
+|   |   |   |-- /dashboard/    # Domínio: Dashboard
+|   |   |   |   |-- /components/ # KpiCard, RecentAlertsWidget
+|   |   |   |   |-- /pages/      # DashboardPage
 |   |-- App.tsx            # Ponto de entrada principal com Provedores e Rotas
 |   |-- main.tsx           # Renderização do app
-|
 |-- .eslintrc.cjs
 |-- .prettierrc
 |-- package.json
