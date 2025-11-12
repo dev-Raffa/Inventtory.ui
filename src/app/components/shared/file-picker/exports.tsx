@@ -1,0 +1,12 @@
+export { FilePicker } from './index';
+export { FilePickerContent } from './pieces/content';
+export { FilePickerCount } from './pieces/count';
+export { FilePickerDrag } from './pieces/drag';
+export { FilePickerEmpty } from './pieces/empty';
+export { FilePickerHeader } from './pieces/header';
+export { FilePickerInput } from './pieces/input';
+export { FilePickerError } from './pieces/error';
+export { FilePickerAddMoreButton } from './pieces/buttons/add-more';
+export { FilePickerButton } from './pieces/buttons/import-files';
+export { FilePickerRemoveAllButton } from './pieces/buttons/remove-all';
+export { FilePickerRemoveFileButton } from './pieces/buttons/remove-file';
