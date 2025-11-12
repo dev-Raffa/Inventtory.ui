@@ -78,6 +78,48 @@ Isso torna o projeto mais modular, fácil de navegar e de dar manutenção.
 |-- vite.config.ts         # Configuração do Vite e Vitest
 ```
 
+## 🏛️ Anatomia dos Componentes
+
+Para manter o projeto organizado e desacoplado, os componentes são divididos em três níveis hierárquicos. Essa estrutura ajuda-nos a entender o nível de responsabilidade de cada componente.
+
+1. Componentes de UI (src/app/components/ui)
+
+- **Propósito**: "Primitivos" de UI, 100% reutilizáveis e "burros" (dumb).
+
+- **Origem**: São os componentes base fornecidos pelo shadcn/ui (ex: Button.tsx, Card.tsx, Input.tsx).
+
+- **Regras**:
+    - NÃO devem conter lógica de negócio (ex: hooks do TanStack Query).
+    - NÃO devem importar nada de /features/.
+    - Apenas recebem props e exibem UI.
+
+2. Componentes Compartilhados (src/app/components/shared)
+
+- **Propósito**: Componentes "inteligentes" ou de layout específicos da aplicação, mas que são reutilizados por múltiplas features.
+
+- **Exemplos no Projeto**:
+    - Logo: Usado no AuthLayout e SystemLayoutHeader.
+    - DataTable: O sistema de tabela reutilizável.
+    - FilePicker: O componente de upload de arquivos.
+
+- **Regras**:
+    - PODEM importar e compor componentes de /ui/.
+    - NÃO devem importar nada de /features/.
+
+3. Componentes de Feature (src/app/features/[nome-da-feature]/components)
+
+- **Propósito**: O coração da aplicação. São componentes com lógica de negócio e contexto de domínio.
+
+- **Exemplos no Projeto**:
+    - ProductListTable: Sabe sobre "Produtos".
+    - ProductForm: Contém toda a lógica do formulário de criação/edição.
+    - ProductImageCarousel: Um carrossel que entende a estrutura IProductImage.
+
+- **Regras**:
+    - PODEM (e devem) importar de /ui/ e /shared/.
+    - PODEM (e devem) usar os hooks da sua própria feature (ex: useProductsQuery).
+    - NÃO devem ser importados por um componente de outra feature (ex: um componente de inventory não deve importar ProductListTable).
+
 ## Testes
 
 Nossa estratégia de testes se baseia em co-localização (colocation) para testes unitários e de integração.
@@ -86,57 +128,6 @@ Nossa estratégia de testes se baseia em co-localização (colocation) para test
 
 - **Testes End-to-End (Cypress/Playwright):** Ficam na pasta /cypress na raiz do projeto, pois testam a aplicação como um todo.
 
-## Como Começar
-
-- Clone este repositório:
-
-```bash
-git clone [URL_DO_REPOSITORIO]
-cd inventto-frontend
-```
-
-- Instale as dependências:
-
-```bash
-npm install
-# ou yarn install / pnpm install
-```
-
-- Crie seu arquivo de ambiente local:
-
-```bash
-cp .env.example .env
-```
-
-- Atualize o .env com a URL do seu backend.
-
-- Rode o servidor de desenvolvimento:
-
-```bash
-npm run dev
-```
-
-## Scripts Disponíveis
-
-```bash
-npm run dev: Inicia o servidor de desenvolvimento com Vite.
-```
-
-```bash
-npm run build: Gera a build de produção do app.
-```
-
-```bash
-npm run lint: Roda o ESLint para analisar o código.
-```
-
-```bash
-npm run test: Roda todos os testes unitários com Vitest no modo "watch".
-```
-
-```bash
-npm run test:ui: Abre a interface gráfica do Vitest.
-```
 
 ## Licença
 
