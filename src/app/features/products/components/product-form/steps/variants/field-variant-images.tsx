@@ -71,6 +71,14 @@ export function ProductFormFieldVariantImages({
                 showSkeleton={false}
               />
             )}
+
+            {fullImageFile?.src.startsWith('blob') && (
+              <ImageCard
+                src={fullImageFile.src}
+                alt={fullImageFile.name}
+                showSkeleton={false}
+              />
+            )}
             {image.isPrimary && (
               <div className="absolute top-0 right-0 p-0.5 bg-black/50 rounded-bl-md">
                 <Star className="size-3 text-yellow-400 fill-yellow-400" />

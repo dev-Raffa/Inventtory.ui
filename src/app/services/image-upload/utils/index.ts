@@ -11,7 +11,7 @@ export function createCloudinaryThumbnail(
   publicId: string,
   options: ThumbnailOptions
 ): string {
-  if (!publicId) {
+  if (!publicId || publicId.startsWith('mock')) {
     return '';
   }
 

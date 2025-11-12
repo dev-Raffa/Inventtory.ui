@@ -19,8 +19,6 @@ export async function uploadImageToCloudinary(
       url: response.data.secure_url
     };
   } catch (error) {
-    console.error('Erro no upload para o Cloudinary:', error);
-
     if (axios.isAxiosError(error) && error.response) {
       throw new Error(
         `Falha no upload: ${error.response.data?.error?.message || error.message}`

@@ -37,7 +37,7 @@ export function processNewFiles(
         file,
         id: generateUniqueId(file),
         src: URL.createObjectURL(file),
-        publicId: generateUniqueId(file),
+        publicId: undefined,
         isPrimary: false,
         name: file.name,
         type: file.type

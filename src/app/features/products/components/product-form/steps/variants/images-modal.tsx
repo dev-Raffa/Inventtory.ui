@@ -137,13 +137,18 @@ export function ImagesModal({ variantIndex }: ImagesModalProps) {
                 {image.publicId && (
                   <ImageCard
                     src={createCloudinaryThumbnail(image.publicId, {
-                      height: 300,
-                      width: 300,
-                      quality: 100
+                      height: 150,
+                      width: 150,
+                      quality: 75
                     })}
                     alt={image.name}
                   />
                 )}
+
+                {image.src.startsWith('blob') && (
+                  <ImageCard src={image.src} alt={image.name} />
+                )}
+
                 {isSelected && (
                   <div className="absolute inset-0 bg-black/50 p-1.5 text-white">
                     <Check className="absolute left-1.5 top-1.5 h-5 w-5 rounded-full bg-primary p-0.5" />

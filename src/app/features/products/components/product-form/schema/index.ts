@@ -13,16 +13,17 @@ export const ProductImageFormSchema = z.object({
   file: z
     .any()
     .refine(
-      (val) => val instanceof File || val === undefined || val === 'object',
+      (val) =>
+        val instanceof File || val === undefined || val === ({} as const),
       {
-        message: 'Input must be a File or an uploaded image object'
+        message: `Input must be a File or an uploaded image object: `
       }
     )
     .optional(),
   name: z.string(),
   src: z.string(),
   type: z.string(),
-  publicId: z.string(),
+  publicId: z.string().optional(),
   isPrimary: z.boolean().optional()
 });
 

@@ -5,7 +5,7 @@ export function useProductsQuery() {
   return useQuery({
     queryKey: ['products'],
     queryFn: ProductService.getAll,
-    staleTime: 5000
+    staleTime: 1000 * 60 * 5
   });
 }
 

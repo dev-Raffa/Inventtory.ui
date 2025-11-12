@@ -14,7 +14,7 @@ export type FileWithPreview = {
   name: string;
   src: string;
   type: string;
-  publicId: string;
+  publicId?: string;
   isPrimary?: boolean;
 };
 
@@ -44,7 +44,6 @@ export type FilePickerActions = {
   getInputProps: (
     props?: InputHTMLAttributes<HTMLInputElement>
   ) => InputHTMLAttributes<HTMLInputElement> & {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ref: any;
   };
 };

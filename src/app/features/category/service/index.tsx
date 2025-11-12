@@ -1,30 +1,28 @@
-import { api } from '@/app/api';
+import { supabase } from '@/app/config/supabase';
 import type { ICategory } from '../types';
 
-const apiRouteUrl = '/category';
-
 async function getAll(): Promise<ICategory[]> {
-  try {
-    const response = await api.get<ICategory[]>(apiRouteUrl);
+  const { data, error } = await supabase.from('categories').select('id, name');
 
-    return response.data;
-  } catch (error) {
-    console.error('Falha ao buscar categorias:', error);
-
+  if (error) {
     throw new Error('Falha ao buscar categorias');
   }
+
+  return data || [];
 }
 
 async function create(name: string): Promise<ICategory> {
-  try {
-    const response = await api.post<ICategory>(apiRouteUrl, { name });
+  const { data, error } = await supabase
+    .from('categories')
+    .insert({ name: name })
+    .select()
+    .single();
 
-    return response.data;
-  } catch (error) {
-    console.error('Falha ao criar categoria:', error);
-
+  if (error) {
     throw new Error('Falha ao criar categoria');
   }
+
+  return data;
 }
 
 export const CategoryService = {

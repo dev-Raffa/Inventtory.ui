@@ -1,58 +1,104 @@
-import { api } from '@/app/api';
-import type { IProduct } from '../types';
+import { supabase } from '@/app/config/supabase';
+import type { IProduct, IProductImage } from '../types';
+import type { ICategory } from '../../category/types';
 
-const API_ROUTE_URL = '/products';
+const selectQuery = `
+  id,
+  name,
+  sku,
+  description,
+  stock,
+  minimum_stock,
+  has_variants,
+  category:categories ( id, name ),
+  attributes:product_attributes ( name, values ),
+  allImages:product_images ( id, name, src, public_id, type, is_primary ),
+  variants:product_variants (
+    id, sku, stock, minimum_stock, options,
+    images:variant_images ( image_id, is_primary )
+  )
+`;
+
+function transformSupabaseDataToIProduct(data: any): IProduct {
+  const allImages: IProductImage = (data.allImages || [])
+    .map((image: any) => ({
+      isPrimary: image.is_primary,
+      publicId: image.public_id
+    }))
+    .sort((a: any, b: any) =>
+      a.is_primary === b.is_primary ? 0 : a.is_primary ? -1 : 1
+    );
+
+  return {
+    ...data,
+    category: data.category as ICategory,
+    attributes: data.attributes || [],
+    allImages: allImages,
+    variants: (data.variants || []).map((v: any) => ({
+      ...v,
+
+      images: (v.images || [])
+        .map((img: any) => ({
+          id: img.image_id,
+          isPrimary: img.is_primary
+        }))
+
+        .sort((a: any, b: any) =>
+          a.isPrimary === b.isPrimary ? 0 : a.isPrimary ? -1 : 1
+        )
+    }))
+  };
+}
 
 async function getAll(): Promise<IProduct[]> {
-  try {
-    const response = await api.get<IProduct[]>(API_ROUTE_URL);
+  const { data, error } = await supabase.from('products').select(selectQuery);
 
-    return response.data.reverse();
-  } catch (error) {
-    console.error('Erro ao buscar produtos:', error);
-
-    throw new Error('Erro ao buscar produtos');
+  if (error) {
+    throw new Error('Falha ao buscar produtos');
   }
+
+  const products: IProduct[] = data.map(transformSupabaseDataToIProduct);
+  return products;
 }
 
 async function getOneById(id: string): Promise<IProduct> {
-  try {
-    const response = await api.get<IProduct>(`${API_ROUTE_URL}/${id}`);
+  const { data, error } = await supabase
+    .from('products')
+    .select(selectQuery)
+    .eq('id', id)
+    .single();
 
-    return response.data;
-  } catch (error) {
-    console.error(`Erro ao buscar produto ${id}:`, error);
-
+  if (error) {
     throw new Error('Erro ao buscar o produto');
   }
+
+  return transformSupabaseDataToIProduct(data);
 }
 
 async function add(params: IProduct): Promise<IProduct> {
-  try {
-    const response = await api.post<IProduct>(API_ROUTE_URL, params);
+  const { data, error } = await supabase.rpc('create_product', {
+    product_data: params
+  });
 
-    return response.data;
-  } catch (error) {
-    console.error('Erro ao adicionar produto:', error);
-
-    throw new Error('Erro ao adicionar produto');
+  if (error) {
+    throw new Error(`Falha ao criar produto: ${error.message}`);
   }
+
+  return getOneById(data);
 }
 
 async function update(params: IProduct): Promise<IProduct> {
-  try {
-    const response = await api.put<IProduct>(
-      `${API_ROUTE_URL}/${params.id}`,
-      params
-    );
+  const { data, error } = await supabase.rpc('update_product', {
+    product_data: params
+  });
 
-    return response.data;
-  } catch (error) {
-    console.error(`Erro ao atualizar produto ${params.id}:`, error);
-
-    throw new Error('Erro ao atualizar o produto');
+  if (error) {
+    throw new Error(`Falha ao atualizar produto: ${error.message}`);
   }
+
+  return getOneById(data);
 }
+
 export const ProductService = {
   getAll: getAll,
   getOneById: getOneById,

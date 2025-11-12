@@ -115,13 +115,12 @@ export function ProductFormProvider({
 
   useEffect(() => {
     const skuStatus = form.getFieldState('sku');
-    const skuvalue = form.getValues('sku');
 
     if (
       !skuStatus.isTouched &&
       productName &&
       !skuStatus.isDirty &&
-      !skuvalue
+      mode === 'Create'
     ) {
       form.setValue(
         'sku',
@@ -132,7 +131,7 @@ export function ProductFormProvider({
       );
     }
     return;
-  }, [form, productName]);
+  }, [form, productName, mode]);
 
   useEffect(() => {
     if (hasVariants === false) {

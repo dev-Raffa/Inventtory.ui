@@ -39,15 +39,20 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
             {images.map((image, index) => (
               <CarouselItem className="h-full" key={index}>
                 <div className="h-full bg-muted rounded-lg overflow-hidden">
-                  <img
-                    src={createCloudinaryThumbnail(image.publicId, {
-                      height: 900,
-                      width: 900,
-                      quality: 80
-                    })}
-                    alt={image.publicId}
-                    className="size-full rounded-t-[inherit] object-cover"
-                  />
+                  {image.publicId && (
+                    <img
+                      src={createCloudinaryThumbnail(image.publicId, {
+                        height: 900,
+                        width: 900,
+                        quality: 80
+                      })}
+                      alt={image.name}
+                    />
+                  )}
+
+                  {image.src.startsWith('blob') && (
+                    <img src={image.src} alt={image.name} />
+                  )}
                 </div>
               </CarouselItem>
             ))}
@@ -81,15 +86,21 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
             aria-label={`Go to slide ${index + 1}`}
             aria-current={index === current - 1}
           >
-            <img
-              src={createCloudinaryThumbnail(image.publicId, {
-                height: 150,
-                width: 150,
-                quality: 75
-              })}
-              alt={image.name}
-              className="size-full rounded-t-[inherit] object-cover"
-            />
+            {image.publicId && (
+              <img
+                src={createCloudinaryThumbnail(image.publicId, {
+                  height: 150,
+                  width: 150,
+                  quality: 75
+                })}
+                alt={image.name}
+              />
+            )}
+
+            {image.src.startsWith('blob') && (
+              <img src={image.src} alt={image.name} />
+            )}
+
             {index !== current - 1 && (
               <div className="absolute inset-0 bg-black/30 hover:bg-black/10 transition-colors duration-200" />
             )}
