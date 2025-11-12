@@ -39,7 +39,7 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
             {images.map((image, index) => (
               <CarouselItem className="h-full" key={index}>
                 <div className="h-full bg-muted rounded-lg overflow-hidden">
-                  {image.publicId && (
+                  {image.publicId && !image.publicId.startsWith('mock') ? (
                     <img
                       src={createCloudinaryThumbnail(image.publicId, {
                         height: 900,
@@ -48,10 +48,8 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
                       })}
                       alt={image.name}
                     />
-                  )}
-
-                  {image.src.startsWith('blob') && (
-                    <img src={image.src} alt={image.name} />
+                  ) : (
+                    image.src && <img src={image.src} alt={image.name} />
                   )}
                 </div>
               </CarouselItem>
@@ -86,7 +84,7 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
             aria-label={`Go to slide ${index + 1}`}
             aria-current={index === current - 1}
           >
-            {image.publicId && (
+            {image.publicId && !image.publicId.startsWith('mock') ? (
               <img
                 src={createCloudinaryThumbnail(image.publicId, {
                   height: 150,
@@ -95,10 +93,8 @@ export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {
                 })}
                 alt={image.name}
               />
-            )}
-
-            {image.src.startsWith('blob') && (
-              <img src={image.src} alt={image.name} />
+            ) : (
+              image.src && <img src={image.src} alt={image.name} />
             )}
 
             {index !== current - 1 && (

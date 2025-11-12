@@ -22,6 +22,7 @@ const selectQuery = `
 function transformSupabaseDataToIProduct(data: any): IProduct {
   const allImages: IProductImage = (data.allImages || [])
     .map((image: any) => ({
+      ...image,
       isPrimary: image.is_primary,
       publicId: image.public_id
     }))
@@ -31,6 +32,7 @@ function transformSupabaseDataToIProduct(data: any): IProduct {
 
   return {
     ...data,
+    hasVariants: data.has_variants,
     category: data.category as ICategory,
     attributes: data.attributes || [],
     allImages: allImages,
