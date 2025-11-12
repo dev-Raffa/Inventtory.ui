@@ -18,7 +18,7 @@ import {
 interface TSimpleDataTable<TData> {
   data: TData[];
   columns: ColumnDef<TData>[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   meta?: TableMeta<any>;
 }
 

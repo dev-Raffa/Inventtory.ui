@@ -16,7 +16,7 @@ import { useDataTable } from '../../hook/usetable';
 interface TNestedDataTable<TData> {
   data: TData[];
   columns: ColumnDef<TData>[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+
   parentData?: any;
 }
 

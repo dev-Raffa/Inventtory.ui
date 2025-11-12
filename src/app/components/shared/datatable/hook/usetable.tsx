@@ -9,7 +9,6 @@ type DataTableContextType<TData> = {
 };
 
 export const DataTableContext = createContext<
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   DataTableContextType<any> | undefined
 >(undefined);
 
