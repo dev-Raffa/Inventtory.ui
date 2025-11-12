@@ -15,7 +15,7 @@ export interface IProductImage {
   name: string;
   src: string;
   type: string;
-  publicId: string;
+  publicId?: string;
   isPrimary?: boolean;
 }
 
