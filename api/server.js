@@ -1,11 +1,11 @@
-const jsonServer = require('json-server');
-const path = require('path');
+import { create, router as _router, defaults, rewriter } from 'json-server';
+import { join } from 'path';
 
-const dbPath = path.join(__dirname, 'db.json');
-const server = jsonServer.create();
-const router = jsonServer.router(dbPath);
+const dbPath = join(__dirname, 'db.json');
+const server = create();
+const router = _router(dbPath);
 
-const middlewares = jsonServer.defaults({
+const middlewares = defaults({
   logger: false,
   static: '/tmp',
 });
@@ -13,11 +13,11 @@ const middlewares = jsonServer.defaults({
 server.use(middlewares);
 
 server.use(
-  jsonServer.rewriter({
+  rewriter({
     '/api/*': '/$1',
   })
 );
 
 server.use(router);
 
-module.exports = server;
+export default server;
