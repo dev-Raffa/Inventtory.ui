@@ -30,7 +30,7 @@ export const generateVariants = ({
       .map((v) => v.trim())
       .filter((v) => v.length > 0);
 
-    if (values.length === 0) continue;
+    if (values.length === 0) return [];
 
     const newCombinations: VariantOption[][] = [];
 
@@ -42,20 +42,25 @@ export const generateVariants = ({
     combinations = newCombinations;
   }
 
-  if (
-    combinations.length === 1 &&
-    combinations[0].length === 0 &&
-    attributes.some((attr) => attr.values.trim().length > 0)
-  ) {
-    return [];
-  }
+  const combinationsKey = new Set<string>(
+    combinations.map((combination) => getCombinationKey(combination))
+  );
 
   const existingKeys = new Set<string>(
     existingVariants.map((variant) => getCombinationKey(variant.options))
   );
 
+  const existingVariantsInNewCombinations = existingVariants.filter(
+    (variant) => {
+      const key = getCombinationKey(variant.options);
+
+      return combinationsKey.has(key);
+    }
+  );
+
   const newCombinations = combinations.filter((combo) => {
     const key = getCombinationKey(combo);
+
     return !existingKeys.has(key);
   });
 
@@ -69,7 +74,7 @@ export const generateVariants = ({
     images: []
   }));
 
-  return [...existingVariants, ...newVariants];
+  return [...existingVariantsInNewCombinations, ...newVariants];
 };
 
 export const parseValues = (valueString: string | undefined): string[] => {
