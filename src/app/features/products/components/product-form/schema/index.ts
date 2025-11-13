@@ -56,7 +56,7 @@ export const variantSchema = z.object({
   images: z.array(ProductVariantImageSchema)
 });
 
-export const productSchema = z.object({
+export const productSchemaWithVariants = z.object({
   id: z.string().optional(),
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres.'),
   sku: z.string().min(1, 'SKU principal é obrigatório.'),
@@ -64,10 +64,31 @@ export const productSchema = z.object({
   category: CategorySchema,
   minimumStock: z.number().int().default(0).optional(),
   stock: z.number().int().optional().default(0).optional(),
-  hasVariants: z.boolean().default(false).optional(),
-  attributes: z.array(attributeSchema).optional(),
-  variants: z.array(variantSchema).optional(),
+  hasVariants: z.literal(true),
+  attributes: z
+    .array(attributeSchema)
+    .min(1, 'Deve conter pelo menos um atributo'),
+  variants: z
+    .array(variantSchema)
+    .min(1, 'Deve conter pelo menos uma variante'),
   allImages: z.array(ProductImageFormSchema).optional()
 });
+
+export const productSchemaWithoutVariants = z.object({
+  id: z.string().optional(),
+  name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres.'),
+  sku: z.string().min(1, 'SKU principal é obrigatório.'),
+  description: z.string().optional(),
+  category: CategorySchema,
+  minimumStock: z.number().int().default(0).optional(),
+  stock: z.number().int().optional().default(0).optional(),
+  hasVariants: z.literal(false),
+  allImages: z.array(ProductImageFormSchema).optional()
+});
+
+export const productSchema = z.discriminatedUnion('hasVariants', [
+  productSchemaWithVariants,
+  productSchemaWithoutVariants
+]);
 
 export type ProductFormData = z.infer<typeof productSchema>;

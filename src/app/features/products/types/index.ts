@@ -33,7 +33,7 @@ export interface IProductVariant {
   options: VariantOption[];
 }
 
-export interface IProduct {
+interface IProductWithVariants {
   id?: string;
   name: string;
   sku: string;
@@ -41,8 +41,24 @@ export interface IProduct {
   category: ICategory;
   minimumStock?: number;
   stock?: number;
-  hasVariants?: boolean;
+  hasVariants: true;
+  attributes: IProductAttribute[];
+  variants: IProductVariant[];
+  allImages?: IProductImage[];
+}
+
+export interface IProductWithoutVariants {
+  id?: string;
+  name: string;
+  sku: string;
+  description?: string;
+  category: ICategory;
+  minimumStock?: number;
+  stock?: number;
+  hasVariants: false;
   attributes?: IProductAttribute[];
   variants?: IProductVariant[];
   allImages?: IProductImage[];
 }
+
+export type IProduct = IProductWithVariants | IProductWithoutVariants;
