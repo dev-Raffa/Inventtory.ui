@@ -23,7 +23,6 @@ type UpdateVariantModeAction = {
 type NextStepAction = {
   type: 'NEXT_STEP';
 };
-
 type PrevStepAction = {
   type: 'PREV_STEP';
 };
