@@ -3,6 +3,7 @@ import {
   useContext,
   useEffect,
   useReducer,
+  useRef,
   type ReactNode
 } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
@@ -22,6 +23,7 @@ import {
 } from '../../../hooks/use-query';
 import { uploadImageToCloudinary } from '@/app/services/image-upload';
 import { useNavigate, useSearchParams } from 'react-router';
+import { LocalStorageService } from '@/app/services/local-storage';
 
 type TProductFormContext = {
   form: UseFormReturn<IProduct>;
@@ -43,7 +45,7 @@ type ProductFormProviderProps = {
   product?: IProduct;
 };
 
-const LOCAL_STORAGE_KEY = 'product_form_draft';
+export const LOCAL_STORAGE_KEY = 'product_form_draft';
 
 export function ProductFormProvider({
   children,
@@ -54,15 +56,19 @@ export function ProductFormProvider({
   const { mutate: updateMutae } = useProductUpdateMutation();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const savedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-  let defaultValuesFromStorage = savedData ? JSON.parse(savedData) : {};
+  const savedDraft = useRef(
+    LocalStorageService.getItem<IProduct>(LOCAL_STORAGE_KEY)
+  );
 
-  if (
-    (product && product.id !== defaultValuesFromStorage.id) ||
-    (mode === 'Create' && defaultValuesFromStorage.id)
-  ) {
-    defaultValuesFromStorage = {};
-  }
+  useEffect(() => {
+    if (
+      (savedDraft.current && savedDraft.current?.id !== product?.id) ||
+      (mode === 'Create' && savedDraft.current?.id)
+    ) {
+      LocalStorageService.removeItem(LOCAL_STORAGE_KEY);
+      savedDraft.current = undefined;
+    }
+  }, [savedDraft, product, mode]);
 
   const form = useForm({
     resolver: zodResolver(productSchema),
@@ -77,52 +83,47 @@ export function ProductFormProvider({
       hasVariants: product?.hasVariants || false,
       attributes: product?.attributes || [],
       variants: product?.variants || [],
-      ...defaultValuesFromStorage
+      ...savedDraft.current
     }
   });
+
+  const { watch, getFieldState, getValues, setValue } = form;
 
   const stepNameFromUrl = searchParams.get('step');
   const [stepState, dispatch] = useReducer(formReducer, initialState);
 
   useEffect(() => {
-    if (
-      stepNameFromUrl &&
-      stepState.currentStep &&
-      stepNameFromUrl !== stepState.currentStep.name
-    ) {
+    if (stepNameFromUrl && stepNameFromUrl !== stepState.currentStep?.name) {
       dispatch({ type: 'GO_TO_STEP', payload: stepNameFromUrl });
     }
-  }, [searchParams, stepNameFromUrl, stepState.currentStep]);
+  }, [stepNameFromUrl, stepState.currentStep]);
 
   useEffect(() => {
-    if (form) {
-      dispatch({
-        type: 'INITIALIZE',
-        payload: { hasVariants: form.getValues('hasVariants') || false }
-      });
-    }
-  }, [form]);
+    dispatch({
+      type: 'INITIALIZE',
+      payload: { hasVariants: getValues('hasVariants') || false }
+    });
+  }, [getValues]);
 
-  const productName = form.watch('name');
-  const hasVariants = form.watch('hasVariants');
-  const watchedData = form.watch();
+  const productName = watch('name');
+  const hasVariants = watch('hasVariants');
+  const watchedData = watch();
 
   useEffect(() => {
     const { ...serializableData } = watchedData;
-    serializableData.id = product?.id;
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(serializableData));
-  }, [watchedData, product]);
+
+    LocalStorageService.setItem(LOCAL_STORAGE_KEY, serializableData);
+  }, [watchedData]);
 
   useEffect(() => {
-    const skuStatus = form.getFieldState('sku');
-
+    const skuStatus = getFieldState('sku');
     if (
       !skuStatus.isTouched &&
       productName &&
       !skuStatus.isDirty &&
       mode === 'Create'
     ) {
-      form.setValue(
+      setValue(
         'sku',
         productName
           .split(' ')
@@ -131,21 +132,16 @@ export function ProductFormProvider({
       );
     }
     return;
-  }, [form, productName, mode]);
+  }, [productName, mode, getFieldState, setValue]);
 
   useEffect(() => {
-    if (hasVariants === false) {
-      form.setValue('attributes', []);
-      form.setValue('variants', []);
-    }
-
     if (hasVariants !== undefined) {
       dispatch({
         type: 'UPDATE_VARIANT_MODE',
         payload: { hasVariants: hasVariants }
       });
     }
-  }, [hasVariants, form]);
+  }, [hasVariants, setValue]);
 
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -157,10 +153,10 @@ export function ProductFormProvider({
 
     if (stepState.currentStep?.name === 'Attributes') {
       const variants = generateVariants({
-        skuBase: form.getValues('sku'),
-        minimumStock: form.getValues('minimumStock'),
-        attributes: form.getValues('attributes') || [],
-        existingVariants: form.getValues('variants')
+        skuBase: getValues('sku'),
+        minimumStock: getValues('minimumStock'),
+        attributes: getValues('attributes') || [],
+        existingVariants: getValues('variants')
       });
 
       form.setValue('variants', variants);
@@ -179,6 +175,7 @@ export function ProductFormProvider({
 
     if (prevStepIndex >= 0) {
       const prevStepName = stepState.allSteps[prevStepIndex].name;
+
       setSearchParams({ step: prevStepName });
     }
   };
@@ -239,8 +236,8 @@ export function ProductFormProvider({
   };
 
   const clearFormData = () => {
-    form.reset();
     localStorage.removeItem(LOCAL_STORAGE_KEY);
+    form.reset();
   };
 
   const onCancel = () => {
