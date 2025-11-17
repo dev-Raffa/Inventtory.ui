@@ -189,6 +189,9 @@ importers:
       vitest:
         specifier: ^4.0.6
         version: 4.0.6(@types/node@24.8.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(yaml@2.8.1)
+      vitest-localstorage-mock:
+        specifier: ^0.1.2
+        version: 0.1.2(vitest@4.0.6(@types/node@24.8.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(yaml@2.8.1))
 
 packages:
 
@@ -3070,6 +3073,11 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  vitest-localstorage-mock@0.1.2:
+    resolution: {integrity: sha512-1oee6iDWhhquzVogssbpwQi6a2F3L+nCKF2+qqyCs5tH0sOYRyTqnsfj2dtmEQiL4xtJkHLn42hEjHGESlsJHw==}
+    peerDependencies:
+      vitest: '*'
 
   vitest@4.0.6:
     resolution: {integrity: sha512-gR7INfiVRwnEOkCk47faros/9McCZMp5LM+OMNWGLaDBSvJxIzwjgNFufkuePBNaesGRnLmNfW+ddbUJRZn0nQ==}
@@ -5961,6 +5969,10 @@ snapshots:
       jiti: 2.6.1
       lightningcss: 1.30.1
       yaml: 2.8.1
+
+  vitest-localstorage-mock@0.1.2(vitest@4.0.6(@types/node@24.8.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(yaml@2.8.1)):
+    dependencies:
+      vitest: 4.0.6(@types/node@24.8.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(yaml@2.8.1)
 
   vitest@4.0.6(@types/node@24.8.1)(jiti@2.6.1)(jsdom@27.2.0)(lightningcss@1.30.1)(yaml@2.8.1):
     dependencies:
