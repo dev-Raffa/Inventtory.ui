@@ -97,7 +97,7 @@ export function ProductSummary() {
                 category={category}
                 description={description}
               />
-              {attributes && (
+              {hasVariants && attributes && (
                 <ProductOptionsSelect
                   attributes={attributes}
                   handleSelectOption={handleSelectOption}
