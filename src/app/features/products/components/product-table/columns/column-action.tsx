@@ -24,7 +24,7 @@ export function ProductTableColumnActions({
     <div className="w-full flex justify-center pr-4">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={'outline'} size="icon-sm">
+          <Button variant={'outline'} size="icon-sm" aria-label="toggle menu">
             <Ellipsis className="from-accent-foreground" />
           </Button>
         </DropdownMenuTrigger>
