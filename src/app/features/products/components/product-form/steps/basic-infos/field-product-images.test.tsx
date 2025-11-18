@@ -90,7 +90,7 @@ describe('ProductFormFieldImages', () => {
     );
   });
 
-  it.skip('The form should be updated when the FilePicker`s onFilesChange event is called.', () => {
+  it('The form should be updated when the FilePicker`s onFilesChange event is called.', () => {
     const { rerender } = renderWithProductProvider(<ProductFormFieldImages />);
     const onFilesChange = MockFilePicker.mock.calls[0][0].onFilesChange;
     const newFiles = [{ id: 'new-img', name: 'new.png', size: 100 }];
@@ -101,9 +101,9 @@ describe('ProductFormFieldImages', () => {
 
     rerender(<ProductFormFieldImages />);
 
-    const pastProps = MockFilePicker.mock.calls[0][0];
+    const lastPastProps = MockFilePicker.mock.lastCall?.[0];
 
-    expect(pastProps).toHaveBeenLastCalledWith(
+    expect(lastPastProps).toEqual(
       expect.objectContaining({
         files: newFiles
       })
