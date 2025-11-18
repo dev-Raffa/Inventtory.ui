@@ -39,7 +39,7 @@ type TProductFormContext = {
 
 const ProductFormContext = createContext<TProductFormContext | null>(null);
 
-type ProductFormProviderProps = {
+export type ProductFormProviderProps = {
   children: ReactNode;
   mode: TProductFormModes;
   product?: IProduct;

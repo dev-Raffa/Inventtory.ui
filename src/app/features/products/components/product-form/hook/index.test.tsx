@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { mockFile, mockFormData, renderProductFormHook } from './mock';
+import {
+  mockFile,
+  mockFormData,
+  renderProductFormHook
+} from '../mocks/index.tsx';
 import { LocalStorageService } from '@/app/services/local-storage';
 import { LOCAL_STORAGE_KEY, useProductForm } from './index.tsx';
 import * as FormReducer from './form-reducer.tsx';

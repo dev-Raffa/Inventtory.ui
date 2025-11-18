@@ -1,10 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
-import { renderHook } from '@testing-library/react';
-import type { TProductFormModes } from '../../types';
+import { render, renderHook, type RenderOptions } from '@testing-library/react';
+import type { TProductFormModes } from '../types';
 import type { IProduct } from '@/app/features/products/types/index.ts';
-import { ProductFormProvider, useProductForm } from '..';
+import {
+  ProductFormProvider,
+  useProductForm,
+  type ProductFormProviderProps
+} from '../hook';
 
 const TestQueryClient = () =>
   new QueryClient({
@@ -15,6 +19,10 @@ const TestQueryClient = () =>
     }
   });
 
+type RenderWithProviderProps = {
+  providerProps?: Partial<ProductFormProviderProps>;
+};
+
 type RenderHookProps = {
   mode?: TProductFormModes;
   product?: IProduct;
@@ -22,7 +30,6 @@ type RenderHookProps = {
 
 const wrapper = ({ mode = 'Create', product }: RenderHookProps = {}) => {
   const queryClient = TestQueryClient();
-
   const initialEntries =
     mode === 'Edit' && product
       ? [`/products/edit/${product.id}`]
@@ -45,6 +52,16 @@ export const renderProductFormHook = (props: RenderHookProps = {}) => {
   return renderHook(() => useProductForm(), {
     wrapper: wrapper(props)
   });
+};
+
+export const renderWithProductProvider = (
+  ui: ReactNode,
+  options: RenderWithProviderProps & Omit<RenderOptions, 'wrapper'> = {}
+) => {
+  const { providerProps, ...renderOptions } = options;
+  const Wrapper = wrapper({ ...providerProps });
+
+  return render(ui, { wrapper: Wrapper, ...renderOptions });
 };
 
 export const mockFile = new File(['(⌐□_□)'], 'new-file.png', {
