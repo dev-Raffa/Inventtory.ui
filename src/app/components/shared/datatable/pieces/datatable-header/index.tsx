@@ -13,6 +13,7 @@ export function DataTableHeader() {
           {headerGroup.headers.map((header) => (
             <TableHead
               key={header.id}
+              id={header.id}
               colSpan={header.colSpan}
               style={{ width: `calc(var(--th-${header.id}-size) * 1px)` }}
               className="relative group"

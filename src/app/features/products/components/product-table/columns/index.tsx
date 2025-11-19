@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { IProduct } from '@/app/features/products/types';
-import { HeaderSortableColumn } from '@/app/components/shared/datatable/pieces/HeaderSortableColumn';
+import { HeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
 import { ProductTableColumnImages } from './column-images';
 import { ProductTableColumnStock } from './column-stock';
 import { ProductTableColumnActions } from './column-action';

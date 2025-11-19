@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useDataTable } from '../../hook/usetable';
 import { Table } from '@/app/components/ui/table';
-import { DataTableHeader } from '../Header/datatable-header';
-import { DataTableBody, MemoizedDataTableBody } from '../Body';
+import { DataTableHeader } from '../datatable-header';
+import { DataTableBody, MemoizedDataTableBody } from '../datatable-body';
 
 export function DataTableContent() {
   const { table } = useDataTable();

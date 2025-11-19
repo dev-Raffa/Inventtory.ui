@@ -7,7 +7,7 @@ import { MemoryRouter } from 'react-router';
 import type { ReactNode } from 'react';
 import type { IProduct } from '../../types';
 import type { Row } from '@tanstack/react-table';
-import type { IDataTable } from '@/app/components/shared/datatable/datatable';
+import type { IDataTable } from '@/app/components/shared/datatable/pieces/datatable';
 
 const mockProducts = [
   {

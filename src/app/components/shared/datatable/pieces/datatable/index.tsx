@@ -4,7 +4,7 @@ import {
   type Row,
   type TableOptions
 } from '@tanstack/react-table';
-import { DataTableContext } from './hook/usetable';
+import { DataTableContext } from '../../hook/usetable';
 
 export interface IDataTable<TData> {
   tableOptions: TableOptions<TData>;

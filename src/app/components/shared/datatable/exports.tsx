@@ -1,6 +1,6 @@
-export { DataTable, type IDataTable } from './datatable';
-export { DataTableContent } from './pieces/Content';
-export { DataTableDropdownColumnsVisibility } from './pieces/DropdownColumnVisibility';
-export { PaginationControllers } from './pieces/PaginationControllers';
-export { DataTableTextFilter } from './pieces/TextFilter';
-export { NestedDataTable } from './pieces/NestedTable';
+export { DataTable, type IDataTable } from './pieces/datatable';
+export { DataTableContent } from './pieces/datatable-content';
+export { DataTableDropdownColumnsVisibility } from './pieces/datatable-dropdown-column-visibility';
+export { PaginationControllers } from './pieces/datatable-pagination-controllers';
+export { DataTableTextFilter } from './pieces/datatable-text-filter';
+export { NestedDataTable } from './pieces/datatable-nested-table';
