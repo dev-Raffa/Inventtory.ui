@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { useFilePicker } from './hooks/use-file-picker';
-import { FilePickerContext } from './hooks'; // MUDANÇA
-import type { FilePickerOptions, FileWithPreview } from './types';
+import { useFilePicker } from '../../hooks/use-file-picker';
+import { FilePickerContext } from '../../hooks';
+import type { FilePickerOptions, FileWithPreview } from '../../types';
 
 type TFilePicker = Omit<
   FilePickerOptions,

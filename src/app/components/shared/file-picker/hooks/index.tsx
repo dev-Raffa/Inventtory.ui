@@ -1,4 +1,3 @@
-//import { useFilePicker } from '@/app/components/shared/file-upload/hook/use-file-picker'; // MUDANÇA
 import { createContext, useContext } from 'react';
 import type {
   FilePickerActions,
@@ -11,7 +10,7 @@ type FilePickerContextType = [
   actions: FilePickerActions
 ];
 
-export const FilePickerContext = createContext<FilePickerContextType | null>( // MUDANÇA
+export const FilePickerContext = createContext<FilePickerContextType | null>(
   null
 );
 
@@ -20,7 +19,7 @@ export function useFilePickerContext() {
 
   if (!context) {
     throw new Error(
-      'useFilePickerContext deve ser usado dentro de <FilePickerProvider>' // MUDANÇA
+      'useFilePickerContext deve ser usado dentro de <FilePickerProvider>'
     );
   }
 

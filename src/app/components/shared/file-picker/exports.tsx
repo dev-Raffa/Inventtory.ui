@@ -1,4 +1,4 @@
-export { FilePicker } from './index';
+export { FilePicker } from './pieces/file-picker/index';
 export { FilePickerContent } from './pieces/content';
 export { FilePickerCount } from './pieces/count';
 export { FilePickerDrag } from './pieces/drag';
