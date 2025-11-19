@@ -17,6 +17,7 @@ export function ImageCard({ src, alt, showSkeleton = true }: TImageCard) {
     setIsLoaded(false);
 
     const img = imgRef.current;
+
     if (img && img.complete && img.naturalWidth > 0) {
       setIsLoaded(true);
     }
