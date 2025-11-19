@@ -1,10 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import '@testing-library/jest-dom/vitest';
 import { vi } from 'vitest';
 
 const ResizeObserverMock = class {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  //@ts-expect-error callback unused
   constructor(callback: ResizeObserverCallback) {}
-
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();

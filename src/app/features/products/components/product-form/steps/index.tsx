@@ -15,12 +15,14 @@ export const steps: ProductFormStep[] = [
     name: 'Attributes',
     label: 'Atributos',
     component: <ProductAttributes key="StepAttributes" />,
+    //@ts-expect-error attributes
     fields: ['attributes']
   },
   {
     name: 'Variants',
     label: 'Variantes',
     component: <ProductVariants key="StepVariants" />,
+    //@ts-expect-error variants
     fields: ['variants']
   },
   {
