@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { act, render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { ProductTableColumnActions } from './column-action';
@@ -41,10 +41,13 @@ describe('ProductTableColumnActions', () => {
 
   it('should open the menu and display all 5 action items', async () => {
     renderComponent(TEST_PRODUCT_ID);
+
     const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
     const user = userEvent.setup();
 
-    user.click(triggerButton);
+    act(() => {
+      user.click(triggerButton);
+    });
 
     const menuItems = await screen.findAllByRole('menuitem', undefined);
 
@@ -55,12 +58,15 @@ describe('ProductTableColumnActions', () => {
     expect(screen.getByText('Registrar Movimentação')).toBeInTheDocument();
   });
 
-  it('deve gerar os links "Detalhes" e "Editar" com o productId correto', async () => {
+  it('should generate the "Details" and "Edit" links with the correct product ID', async () => {
     const user = userEvent.setup();
     renderComponent(TEST_PRODUCT_ID);
 
     const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
-    user.click(triggerButton);
+
+    act(() => {
+      user.click(triggerButton);
+    });
 
     const linkDetalhes = await screen.findByTestId('link-detalhes');
     expect(linkDetalhes).toHaveAttribute(
