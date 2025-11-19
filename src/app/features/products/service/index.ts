@@ -20,7 +20,7 @@ const selectQuery = `
 `;
 
 function transformSupabaseDataToIProduct(data: any): IProduct {
-  const allImages: IProductImage = (data.allImages || [])
+  const allImages: IProductImage[] = (data.allImages || [])
     .map((image: any) => ({
       ...image,
       isPrimary: image.is_primary,
@@ -31,8 +31,13 @@ function transformSupabaseDataToIProduct(data: any): IProduct {
     );
 
   return {
-    ...data,
+    id: data.id,
+    name: data.name,
+    sku: data.sku,
+    description: data.description,
     hasVariants: data.has_variants,
+    minimumStock: data.minimum_stock,
+    stock: data.stock,
     category: data.category as ICategory,
     attributes: data.attributes || [],
     allImages: allImages,
@@ -71,7 +76,7 @@ async function getOneById(id: string): Promise<IProduct> {
     .single();
 
   if (error) {
-    throw new Error('Erro ao buscar o produto');
+    throw new Error(`Erro ao buscar o produto: ${error.message}`);
   }
 
   return transformSupabaseDataToIProduct(data);
@@ -86,7 +91,7 @@ async function add(params: IProduct): Promise<IProduct> {
     throw new Error(`Falha ao criar produto: ${error.message}`);
   }
 
-  return getOneById(data);
+  return ProductService.getOneById(data);
 }
 
 async function update(params: IProduct): Promise<IProduct> {
@@ -98,7 +103,7 @@ async function update(params: IProduct): Promise<IProduct> {
     throw new Error(`Falha ao atualizar produto: ${error.message}`);
   }
 
-  return getOneById(data);
+  return ProductService.getOneById(data);
 }
 
 export const ProductService = {
