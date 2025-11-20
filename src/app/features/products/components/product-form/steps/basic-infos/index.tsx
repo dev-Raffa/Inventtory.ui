@@ -14,26 +14,30 @@ import { useProductForm } from '../../hook';
 import { ProductFormFieldImages } from './field-product-images';
 
 export function ProductBasicInfo() {
-  const { form, mode } = useProductForm();
+  const { form, mode, handleNameChange, handleVariantSwitch } =
+    useProductForm();
 
   return (
     <div className="h-full grid grid-cols-1 gap-x-12 gap-5 md:grid-cols-2">
       <FormField
         control={form.control}
         name={'name'}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Nome do Produto</FormLabel>
-            <FormControl>
-              <Input
-                placeholder="Ex: Camisa Social Slim Fit"
-                disabled={mode === 'Create' ? false : true}
-                {...field}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
+        render={({ field }) => {
+          return (
+            <FormItem>
+              <FormLabel>Nome do Produto</FormLabel>
+              <FormControl>
+                <Input
+                  placeholder="Ex: Camisa Social Slim Fit"
+                  disabled={mode === 'Create' ? false : true}
+                  {...field}
+                  onChange={(e) => handleNameChange(e.target.value)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <FormField
@@ -102,29 +106,31 @@ export function ProductBasicInfo() {
       <FormField
         control={form.control}
         name={'hasVariants'}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Este produto possui variações?</FormLabel>
-            <div className="space-y-0.5 flex justify-between items-center border p-2 rounded-md">
-              <FormDescription>
-                Ex: Cores, Tamanhos, Voltagem, etc.
-              </FormDescription>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                  disabled={
-                    mode === 'Edit' &&
-                    !form.getFieldState('hasVariants').isDirty &&
-                    field.value === true
-                      ? true
-                      : false
-                  }
-                />
-              </FormControl>
-            </div>
-          </FormItem>
-        )}
+        render={({ field }) => {
+          return (
+            <FormItem>
+              <FormLabel>Este produto possui variações?</FormLabel>
+              <div className="space-y-0.5 flex justify-between items-center border p-2 rounded-md">
+                <FormDescription>
+                  Ex: Cores, Tamanhos, Voltagem, etc.
+                </FormDescription>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={handleVariantSwitch}
+                    disabled={
+                      mode === 'Edit' &&
+                      !form.getFieldState('hasVariants').isDirty &&
+                      field.value === true
+                        ? true
+                        : false
+                    }
+                  />
+                </FormControl>
+              </div>
+            </FormItem>
+          );
+        }}
       />
 
       <div className="col-span-2">

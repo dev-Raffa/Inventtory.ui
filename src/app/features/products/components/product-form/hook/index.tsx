@@ -33,6 +33,8 @@ type TProductFormContext = {
   onSubmit: (data: ProductFormData) => void;
   clearFormData: () => void;
   onCancel: () => void;
+  handleNameChange: (name: string) => void;
+  handleVariantSwitch: (checked: boolean) => void;
   handleNextStep: (e: React.MouseEvent) => void;
   handlePrevStep: () => void;
 };
@@ -105,8 +107,6 @@ export function ProductFormProvider({
     });
   }, [getValues]);
 
-  const productName = watch('name');
-  const hasVariants = watch('hasVariants');
   const watchedData = watch();
 
   useEffect(() => {
@@ -115,33 +115,33 @@ export function ProductFormProvider({
     LocalStorageService.setItem(LOCAL_STORAGE_KEY, serializableData);
   }, [watchedData]);
 
-  useEffect(() => {
-    const skuStatus = getFieldState('sku');
-    if (
-      !skuStatus.isTouched &&
-      productName &&
-      !skuStatus.isDirty &&
-      mode === 'Create'
-    ) {
-      setValue(
-        'sku',
-        productName
-          .split(' ')
-          .map((string: string) => string.slice(0, 3).toUpperCase())
-          .join('-')
-      );
-    }
-    return;
-  }, [productName, mode, getFieldState, setValue]);
+  const handleNameChange = (name: string) => {
+    setValue('name', name, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true
+    });
 
-  useEffect(() => {
-    if (hasVariants !== undefined) {
-      dispatch({
-        type: 'UPDATE_VARIANT_MODE',
-        payload: { hasVariants: hasVariants }
-      });
+    const skuStatus = getFieldState('sku');
+
+    if (mode === 'Create' && !skuStatus.isDirty && name) {
+      const generatedSku = name
+        .split(' ')
+        .map((string) => string.slice(0, 3).toUpperCase())
+        .join('-');
+
+      setValue('sku', generatedSku);
     }
-  }, [hasVariants, setValue]);
+  };
+
+  const handleVariantSwitch = (checked: boolean) => {
+    setValue('hasVariants', checked, { shouldDirty: true });
+
+    dispatch({
+      type: 'UPDATE_VARIANT_MODE',
+      payload: { hasVariants: checked }
+    });
+  };
 
   const handleNextStep = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -251,6 +251,8 @@ export function ProductFormProvider({
     onSubmit,
     onCancel,
     clearFormData,
+    handleVariantSwitch,
+    handleNameChange,
     handleNextStep,
     handlePrevStep,
     mode,

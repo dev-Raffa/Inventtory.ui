@@ -127,11 +127,10 @@ describe('ProductFormProvider', () => {
       vi.mocked(mockLocalStorageService.getItem).mockReturnValue(mockFormData);
 
       renderProductFormHook({
-        //@ts-expect-error product.hasVariants is not compatible with boolean type
         product: {
           ...mockFormData,
           id: 'product-2'
-        }
+        } as IProduct
       });
 
       expect(mockLocalStorageService.getItem).toReturnWith(mockFormData);
@@ -145,8 +144,7 @@ describe('ProductFormProvider', () => {
 
       renderProductFormHook({
         mode: 'Edit',
-        //@ts-expect-error product.hasVariants is not compatible with boolean type
-        product: mockFormData
+        product: mockFormData as IProduct
       });
 
       expect(mockLocalStorageService.getItem).toReturnWith(mockFormData);
@@ -160,8 +158,7 @@ describe('ProductFormProvider', () => {
 
       renderProductFormHook({
         mode: 'Edit',
-        //@ts-expect-error product.hasVariants is not compatible with boolean type
-        product: mockFormData
+        product: mockFormData as IProduct
       });
 
       expect(mockLocalStorageService.getItem).toReturnWith(undefined);
@@ -219,7 +216,7 @@ describe('ProductFormProvider', () => {
     });
   });
 
-  describe('useEffect SKU automatic generate', () => {
+  describe('handleNameChange', () => {
     it('should automatically generate an SKU when the product name is entered in "Create" mode.', async () => {
       const { result } = renderProductFormHook({ mode: 'Create' });
 
@@ -229,10 +226,11 @@ describe('ProductFormProvider', () => {
       const skuEsperado = 'MEU-PRO-TES';
 
       act(() => {
-        result.current.form.setValue('name', nomeProduto);
+        result.current.handleNameChange(nomeProduto);
       });
 
       await waitFor(() => {
+        expect(result.current.form.getValues('name')).toBe(nomeProduto);
         expect(result.current.form.getValues('sku')).toBe(skuEsperado);
       });
     });
@@ -242,14 +240,13 @@ describe('ProductFormProvider', () => {
 
       const { result } = renderProductFormHook({
         mode: 'Edit',
-        //@ts-expect-error Type 'boolean' is not assignable to type 'false'.
-        product: { ...mockFormData, sku: skuOriginal }
+        product: { ...mockFormData, sku: skuOriginal } as IProduct
       });
 
       expect(result.current.form.getValues('sku')).toBe(skuOriginal);
 
       act(() => {
-        result.current.form.setValue('name', 'Nome Editado');
+        result.current.handleNameChange('Nome Editado');
       });
 
       await waitFor(() => {
@@ -273,7 +270,7 @@ describe('ProductFormProvider', () => {
       expect(result.current.form.getValues('sku')).toBe(skuManual);
 
       act(() => {
-        result.current.form.setValue('name', 'Produto Novo');
+        result.current.handleNameChange('Produto Novo');
       });
 
       await waitFor(() => {
@@ -284,7 +281,7 @@ describe('ProductFormProvider', () => {
     });
   });
 
-  describe('useEffect update form steps', () => {
+  describe('handleVariantSwitch', () => {
     const stepsWithoutVariants = ['BasicInfo', 'Summary'];
     const stepsWithVariantes = [
       'BasicInfo',
@@ -305,7 +302,7 @@ describe('ProductFormProvider', () => {
       );
 
       act(() => {
-        result.current.form.setValue('hasVariants', true);
+        result.current.handleVariantSwitch(true);
       });
 
       await waitFor(() => {
@@ -322,8 +319,7 @@ describe('ProductFormProvider', () => {
     it('The number of steps should decrease from 4 to 2 when hasVariants changes to "false".', async () => {
       const { result } = renderProductFormHook({
         mode: 'Create',
-        // @ts-expect-error - ignorando outros campos de mockFormData
-        product: { hasVariants: true }
+        product: { hasVariants: true } as IProduct
       });
 
       expect(result.current.stepState.totalSteps).toBe(
@@ -334,7 +330,7 @@ describe('ProductFormProvider', () => {
       );
 
       act(() => {
-        result.current.form.setValue('hasVariants', false);
+        result.current.handleVariantSwitch(false);
       });
 
       await waitFor(() => {
@@ -397,7 +393,7 @@ describe('ProductFormProvider', () => {
       const stepIndex = 1;
 
       await act(async () => {
-        result.current.form.setValue('hasVariants', true);
+        result.current.handleVariantSwitch(true);
       });
 
       result.current.stepState.stepIndex = stepIndex;
