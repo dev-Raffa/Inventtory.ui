@@ -1,6 +1,4 @@
 import { useCallback, useMemo, useState } from 'react';
-import { Link } from 'react-router';
-import { Button } from '@/app/components/ui/button';
 import { columnsProductListTable } from './columns';
 import { productVariantsTableColumns } from '../product-variants-table/columns';
 import type { IProduct } from '../../types';
@@ -63,17 +61,14 @@ export function ProductListTable() {
 
   return (
     <DataTable tableOptions={tableOptions} renderSubRow={renderVariantsDetails}>
-      <section className="flex justify-between items-end w-full pt-4">
-        <section className="w-72">
+      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
+        <section className="flex flex-1 flex-col sm:flex-row gap-4 w-full">
           <DataTableTextFilter placeholder="Digite Nome ou SKU do produto" />
+          <section className="gap-2 pl-4 flex items-center">
+            <DataTableDropdownColumnsVisibility />
+          </section>
         </section>
-        <section className="gap-2 flex items-center">
-          <DataTableDropdownColumnsVisibility />
-          <Button size={'sm'} className="bg-green-950 cursor-pointer">
-            <Link to="create">Adicionar</Link>
-          </Button>
-        </section>
-      </section>
+      </div>
       <section className="my-2.5 border-2 rounded-lg">
         <DataTableContent />
       </section>

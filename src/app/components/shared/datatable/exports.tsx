@@ -4,3 +4,5 @@ export { DataTableDropdownColumnsVisibility } from './pieces/datatable-dropdown-
 export { PaginationControllers } from './pieces/datatable-pagination-controllers';
 export { DataTableTextFilter } from './pieces/datatable-text-filter';
 export { NestedDataTable } from './pieces/datatable-nested-table';
+export { DataTableSelectFilter } from './pieces/datatable-select-filter';
+export { DataTableDateRangeFilter } from './pieces/datatable-date-range-filter';

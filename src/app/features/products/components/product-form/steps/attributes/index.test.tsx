@@ -16,12 +16,11 @@ type RenderWithProviderProps = {
 
 const createTestWrapper = (props: RenderWithProviderProps = {}) => {
   const { providerProps } = props;
-  const queryClient = new QueryClient(/* ... */);
+  const queryClient = new QueryClient();
 
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       <MemoryRouter>
-        {/* 👇 Passa as providerProps para o provider */}
         <ProductFormProvider mode="Create" {...providerProps}>
           {children}
         </ProductFormProvider>
@@ -31,12 +30,10 @@ const createTestWrapper = (props: RenderWithProviderProps = {}) => {
   return Wrapper;
 };
 
-// 👇 Atualiza a assinatura da função
 export const renderWithProductProvider = (
   ui: ReactElement,
   options: RenderWithProviderProps & Omit<RenderOptions, 'wrapper'> = {}
 ) => {
-  // Extrai nossas props customizadas
   const { providerProps, ...renderOptions } = options;
   const wrapper = createTestWrapper({ providerProps });
   return render(ui, { wrapper, ...renderOptions });

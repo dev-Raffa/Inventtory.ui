@@ -1,13 +1,11 @@
 import { useDataTable } from '../../hook/usetable';
 import { Button } from '@/app/components/ui/button';
-import { Settings2 } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import {
   DropdownMenuCheckboxItem,
-  DropdownMenuLabel,
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator
+  DropdownMenuTrigger
 } from '@/app/components/ui/dropdown-menu';
 
 export function DataTableDropdownColumnsVisibility() {
@@ -17,13 +15,11 @@ export function DataTableDropdownColumnsVisibility() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm">
-          <Settings2 />
-          Configurar
+          <Eye />
+          Exibir Colunas
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Visualizar Colunas</DropdownMenuLabel>
-        <DropdownMenuSeparator />
         {table.getAllColumns().map(
           (column) =>
             column.getCanHide() && (

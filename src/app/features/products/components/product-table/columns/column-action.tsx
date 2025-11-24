@@ -1,4 +1,6 @@
+import { Link } from 'react-router';
 import { Button } from '@/app/components/ui/button';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -6,6 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/app/components/ui/dropdown-menu';
+
 import {
   ArrowLeftRight,
   Ellipsis,
@@ -13,7 +16,6 @@ import {
   GalleryVerticalEnd,
   SquarePen
 } from 'lucide-react';
-import { Link } from 'react-router';
 
 export function ProductTableColumnActions({
   productId
@@ -47,10 +49,20 @@ export function ProductTableColumnActions({
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem>
-            <GalleryVerticalEnd /> Ver Histórico
+            <Link
+              className="flex gap-2 w-full items-center"
+              to={`/movements?productId=${productId}`}
+            >
+              <GalleryVerticalEnd /> Ver Histórico
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuItem>
-            <ArrowLeftRight /> Registrar Movimentação
+            <Link
+              className="flex gap-2 w-full items-center"
+              to={`/movements/new?preselect=${productId}`}
+            >
+              <ArrowLeftRight /> Registrar Movimentação
+            </Link>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
