@@ -16,7 +16,7 @@ import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ProductFormData } from '../../../product-form/schema';
 import { ImageCard } from '@/app/components/shared/image-card';
-import type { IProductImage } from '@/app/features/products/types';
+import type { IProductImage } from '@/app/features/products/types/models';
 import { createCloudinaryThumbnail } from '@/app/services/image-upload/utils';
 
 interface ImagesModalProps {

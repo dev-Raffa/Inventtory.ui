@@ -27,7 +27,7 @@ import {
   FormItem,
   FormMessage
 } from '@/app/components/ui/form';
-import type { MovementType } from '@/app/features/movements/types';
+import type { MovementType } from '@/app/features/movements/types/model';
 
 export function MovementFormHeader() {
   const { form, reasonOptions, actions } = useMovementForm();

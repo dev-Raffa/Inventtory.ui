@@ -1,5 +1,5 @@
 import { Badge } from '@/app/components/ui/badge';
-import type { IProduct } from '../../types';
+import type { IProduct } from '../../types/models';
 import { Separator } from '@/app/components/ui/separator';
 
 type TProductBasicInfosCard = Pick<

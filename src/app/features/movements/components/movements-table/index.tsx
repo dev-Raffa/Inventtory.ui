@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { columnsMovementsListTable } from './columns';
 import { MovementsItemsTable } from '../movements-items-table';
-import type { MovementResponse } from '../../types/index';
+import type { MovementResponse } from '../../types/model';
 
 import {
   getCoreRowModel,

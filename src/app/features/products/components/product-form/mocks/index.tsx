@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { MemoryRouter } from 'react-router';
 import { render, renderHook, type RenderOptions } from '@testing-library/react';
 import type { TProductFormModes } from '../types';
-import type { IProduct } from '@/app/features/products/types/index.ts';
+import type { IProduct } from '@/app/features/products/types/models';
 import {
   ProductFormProvider,
   useProductForm,

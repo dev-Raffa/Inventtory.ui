@@ -2,7 +2,7 @@ import { SimpleDataTable } from '@/app/components/shared/simple-data-table';
 import type { TableMeta } from '@tanstack/react-table';
 import { memo } from 'react';
 import { columnsMovementsItemsTable } from './columns';
-import type { MovementItemResponse } from '../../types';
+import type { MovementItemResponse } from '../../types/model';
 
 type MovementsItemsTableProps<TParent> = {
   data: MovementItemResponse[];

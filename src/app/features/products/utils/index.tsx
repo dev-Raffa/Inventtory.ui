@@ -1,4 +1,4 @@
-import type { IProduct } from '../types';
+import type { IProduct } from '../types/models';
 
 type TGetVariantImages = {
   allImages: IProduct['allImages'];

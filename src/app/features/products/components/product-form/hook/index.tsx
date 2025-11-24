@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { IProduct, IProductImage } from '../../../types';
+import type { IProduct, IProductImage } from '../../../types/models';
 import {
   formReducer,
   initialState,

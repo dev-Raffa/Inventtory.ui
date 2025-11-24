@@ -1,4 +1,7 @@
-import type { IProduct, IProductVariant } from '@/app/features/products/types';
+import type {
+  IProduct,
+  IProductVariant
+} from '@/app/features/products/types/models';
 import type { CellContext, ColumnDef } from '@tanstack/react-table';
 import { ProductTableColumnImages } from '../../product-table/columns/column-images';
 import { ProductTableColumnStock } from '../../product-table/columns/column-stock';

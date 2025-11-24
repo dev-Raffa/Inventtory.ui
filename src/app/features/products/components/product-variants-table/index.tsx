@@ -1,5 +1,5 @@
 import { SimpleDataTable } from '@/app/components/shared/simple-data-table';
-import type { IProductVariant } from '../../types';
+import type { IProductVariant } from '../../types/models';
 import { productVariantsTableColumns } from './columns';
 import type { TableMeta } from '@tanstack/react-table';
 import { memo } from 'react';

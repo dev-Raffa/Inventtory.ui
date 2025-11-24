@@ -4,7 +4,7 @@ import { mockFormData, renderWithProductProvider } from '../../mocks';
 import { ProductFormFieldImages } from './field-product-images';
 import type { ReactNode } from 'react';
 import type { ProductFormProviderProps } from '../../hook';
-import type { IProductImage } from '@/app/features/products/types';
+import type { IProductImage } from '@/app/features/products/types/models';
 
 const { MockFilePicker } = vi.hoisted(() => ({
   MockFilePicker: vi.fn((props) => (

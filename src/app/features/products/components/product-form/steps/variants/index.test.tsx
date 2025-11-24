@@ -4,7 +4,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { renderWithProductProvider } from '../../mocks';
 import { ProductVariants } from './';
 import type { ProductFormProviderProps } from '../../hook';
-import type { IProductVariant } from '@/app/features/products/types';
+import type { IProductVariant } from '@/app/features/products/types/models';
 
 vi.mock('./field-variant-images', () => ({
   ProductFormFieldVariantImages: ({

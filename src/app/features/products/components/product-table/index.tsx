@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { columnsProductListTable } from './columns';
 import { productVariantsTableColumns } from '../product-variants-table/columns';
-import type { IProduct } from '../../types';
+import type { IProduct } from '../../types/models';
 
 import {
   getCoreRowModel,

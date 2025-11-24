@@ -1,5 +1,8 @@
 import type { CellContext, ColumnDef } from '@tanstack/react-table';
-import type { MovementResponse, MovementItemResponse } from '../../../types';
+import type {
+  MovementResponse,
+  MovementItemResponse
+} from '../../../types/model';
 import { ImageCard } from '@/app/components/shared/image-card';
 import { Badge } from '@/app/components/ui/badge';
 import { cn } from '@/lib/utils';

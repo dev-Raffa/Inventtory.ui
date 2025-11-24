@@ -10,7 +10,7 @@ export const movementItemSchema = z.object({
   quantity: z.number().min(1, 'A quantidade deve ser maior que 0')
 });
 
-export const movementSchema = z.object({
+export const baseMovementSchema = z.object({
   type: z.enum(['entry', 'withdrawal', 'adjustment']),
   date: z.date({ error: 'Selecione uma data' }),
   time: z
@@ -24,6 +24,20 @@ export const movementSchema = z.object({
   items: z
     .array(movementItemSchema)
     .min(1, 'Adicione pelo menos um item à movimentação')
+});
+
+export const movementSchema = baseMovementSchema.superRefine((data, ctx) => {
+  if (data.type === 'withdrawal') {
+    data.items.forEach((item, index) => {
+      if (item.quantity > item.currentStock) {
+        ctx.addIssue({
+          code: 'custom',
+          message: `Quantidade indisponível (Máx: ${item.currentStock})`,
+          path: ['items', index, 'quantity']
+        });
+      }
+    });
+  }
 });
 
 export type MovementFormData = z.infer<typeof movementSchema>;

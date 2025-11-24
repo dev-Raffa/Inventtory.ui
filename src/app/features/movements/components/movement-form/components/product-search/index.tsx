@@ -16,7 +16,7 @@ import {
   PopoverTrigger
 } from '@/app/components/ui/popover';
 import { Button } from '@/app/components/ui/button';
-import type { IProduct } from '@/app/features/products/types';
+import type { IProduct } from '@/app/features/products/types/models';
 
 interface ProductSearchProps {
   products: IProduct[];

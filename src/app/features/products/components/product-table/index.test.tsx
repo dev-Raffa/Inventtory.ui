@@ -1,11 +1,9 @@
-import { screen, act } from '@testing-library/react';
+import { screen, act, render } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
 import { ProductListTable } from './';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router';
 import type { ReactNode } from 'react';
-import type { IProduct } from '../../types';
+import type { IProduct } from '../../types/models';
 import type { Row } from '@tanstack/react-table';
 import type { IDataTable } from '@/app/components/shared/datatable/pieces/datatable';
 
@@ -47,18 +45,6 @@ vi.mock('../../hooks/use-query', () => ({
   useProductsQuery: () => mockUseProductsQuery()
 }));
 
-vi.mock('react-router', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('react-router')>();
-  return {
-    ...mod,
-    Link: ({ to, children }: any) => (
-      <a href={to} data-testid="link-add">
-        {children}
-      </a>
-    )
-  };
-});
-
 vi.mock('@/app/components/shared/datatable/exports', () => ({
   DataTable: MockDataTable,
   DataTableContent: () => <div data-testid="datatable-content"></div>,
@@ -78,14 +64,18 @@ vi.mock('../product-variants-table/columns', () => ({
   productVariantsTableColumns: [{ accessorKey: 'sku', header: 'SKU' }]
 }));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false
+    }
+  }
+});
 
 const renderComponent = () => {
   return render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter>
-        <ProductListTable />
-      </MemoryRouter>
+      <ProductListTable />
     </QueryClientProvider>
   );
 };
@@ -95,7 +85,7 @@ describe('ProductListTable', () => {
     vi.clearAllMocks();
   });
 
-  it('should render all UI components and the add button', () => {
+  it('should render all specific DataTable sub-components', () => {
     mockUseProductsQuery.mockReturnValue({
       data: mockProducts,
       isLoading: false
@@ -106,15 +96,11 @@ describe('ProductListTable', () => {
     expect(screen.getByTestId('data-table')).toBeInTheDocument();
     expect(screen.getByTestId('datatable-filter')).toBeInTheDocument();
     expect(screen.getByTestId('datatable-visibility')).toBeInTheDocument();
+    expect(screen.getByTestId('datatable-content')).toBeInTheDocument();
     expect(screen.getByTestId('datatable-pagination')).toBeInTheDocument();
-
-    const addButton = screen.getByRole('button', { name: 'Adicionar' });
-
-    expect(addButton).toBeInTheDocument();
-    expect(screen.getByTestId('link-add')).toHaveAttribute('href', 'create');
     expect(
-      screen.getByRole('button', { name: 'Adicionar' })
-    ).toBeInTheDocument();
+      screen.queryByRole('button', { name: /Adicionar/i })
+    ).not.toBeInTheDocument();
   });
 
   it('deve passar um array vazio para a DataTable quando a query retornar undefined', () => {
@@ -128,10 +114,6 @@ describe('ProductListTable', () => {
     const tableProps = MockDataTable.mock.lastCall?.[0];
 
     expect(tableProps?.tableOptions.data).toEqual([]);
-
-    expect(
-      screen.getByRole('button', { name: 'Adicionar' })
-    ).toBeInTheDocument();
   });
 
   it('must pass the correct options (data and columns) to the DataTable', () => {
@@ -168,7 +150,7 @@ describe('ProductListTable', () => {
     );
   });
 
-  it('must call the NestedDataTable with the correct props', () => {
+  it('must call the NestedDataTable with the correct props via renderSubRow', () => {
     renderComponent();
 
     const mockRow: Row<IProduct> = {
@@ -179,6 +161,7 @@ describe('ProductListTable', () => {
 
     if (renderSubRow) {
       const nestedTableElement = renderSubRow(mockRow, 0);
+
       render(nestedTableElement);
     }
 
@@ -195,7 +178,7 @@ describe('ProductListTable', () => {
     );
   });
 
-  it('must manage the expanded state', () => {
+  it('must manage the expanded state correctly', () => {
     renderComponent();
 
     const setIsExpanded =

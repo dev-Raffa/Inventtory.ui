@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { generateVariants, parseValues } from '.';
-import type { IProductAttribute, IProductVariant } from '../../../types';
+import type { IProductAttribute, IProductVariant } from '../../../types/models';
 
 const mockAttributes: IProductAttribute[] = [
   {

@@ -1,4 +1,4 @@
-import type { IProductImage } from '@/app/features/products/types';
+import type { IProductImage } from '@/app/features/products/types/models';
 
 export const getProductImage = (
   productImages?: IProductImage[],

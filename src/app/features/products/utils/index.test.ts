@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { getVariantImages } from './';
-import type { IProductImage } from '../types';
+import type { IProductImage } from '../types/models';
 
 const allImagesMock: IProductImage[] = [
   {

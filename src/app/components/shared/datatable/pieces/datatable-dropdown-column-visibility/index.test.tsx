@@ -78,14 +78,16 @@ describe('DataTableDropdownColumnsVisibility', () => {
     render(<DataTableDropdownColumnsVisibility />);
 
     const user = userEvent.setup();
-    const triggerButton = screen.getByRole('button', { name: /Configurar/i });
+    const triggerButton = screen.getByRole('button', {
+      name: /Exibir colunas/i
+    });
 
     expect(triggerButton).toBeInTheDocument();
 
     user.click(triggerButton);
 
     await waitFor(() => {
-      expect(screen.getByText('Visualizar Colunas')).toBeInTheDocument();
+      expect(screen.getByText('Nome do Produto')).toBeInTheDocument();
     });
   });
 
@@ -93,7 +95,9 @@ describe('DataTableDropdownColumnsVisibility', () => {
     render(<DataTableDropdownColumnsVisibility />);
 
     const user = userEvent.setup();
-    const triggerButton = screen.getByRole('button', { name: /Configurar/i });
+    const triggerButton = screen.getByRole('button', {
+      name: /Exibir colunas/i
+    });
 
     await user.click(triggerButton);
 
@@ -107,7 +111,9 @@ describe('DataTableDropdownColumnsVisibility', () => {
   it('must connect the state and the toggleVisibility function correctly', async () => {
     render(<DataTableDropdownColumnsVisibility />);
 
-    const triggerButton = screen.getByRole('button', { name: /Configurar/i });
+    const triggerButton = screen.getByRole('button', {
+      name: /Exibir colunas/i
+    });
     const user = userEvent.setup();
 
     await user.click(triggerButton);
@@ -121,7 +127,7 @@ describe('DataTableDropdownColumnsVisibility', () => {
     expect(nameItem.closest('label')).toHaveAttribute('data-checked', 'true');
     expect(skuItem.closest('label')).toHaveAttribute('data-checked', 'false');
 
-    await fireEvent.click(skuItem); // Clica no SKU
+    await fireEvent.click(skuItem);
 
     expect(mockToggleVisibility).toHaveBeenCalledTimes(1);
   });

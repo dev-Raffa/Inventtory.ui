@@ -14,9 +14,9 @@ import type {
   CreateMovementDTO,
   MovementItem,
   MovementType
-} from '../../../types';
+} from '../../../types/model';
 import { ReasonOptions, type reason } from '../consts';
-import type { IProduct } from '@/app/features/products/types';
+import type { IProduct } from '@/app/features/products/types/models';
 import { useProductsQuery } from '@/app/features/products/hooks/use-query';
 
 interface MovementFormContextType {

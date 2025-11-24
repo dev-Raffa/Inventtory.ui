@@ -19,8 +19,11 @@ import {
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import type { IProduct, IProductVariant } from '@/app/features/products/types';
-import type { MovementItem } from '@/app/features/movements/types';
+import type {
+  IProduct,
+  IProductVariant
+} from '@/app/features/products/types/models';
+import type { MovementItem } from '@/app/features/movements/types/model';
 import { getProductImage } from '../../utils';
 
 interface AddVariantsDialogProps {

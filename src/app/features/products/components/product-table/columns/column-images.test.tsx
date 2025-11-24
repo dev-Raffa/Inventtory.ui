@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductTableColumnImages } from './column-images';
-import type { IProductImage } from '../../../types';
+import type { IProductImage } from '../../../types/models';
 
 const { mockCloudinary } = vi.hoisted(() => ({
   mockCloudinary: vi.fn((publicId) => `thumb-mock/${publicId}`)

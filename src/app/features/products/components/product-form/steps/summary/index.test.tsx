@@ -4,7 +4,7 @@ import { renderWithProductProvider } from '../../mocks';
 import { ProductSummary } from './';
 import userEvent from '@testing-library/user-event';
 import type { ProductFormProviderProps } from '../../hook';
-import type { IProduct } from '@/app/features/products/types';
+import type { IProduct } from '@/app/features/products/types/models';
 
 const {
   MockBasicInfosCard,

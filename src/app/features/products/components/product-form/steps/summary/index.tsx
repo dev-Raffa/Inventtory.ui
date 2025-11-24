@@ -10,7 +10,7 @@ import { ProductInventtoryCard } from '../../../product-inventtory-card';
 import { useProductForm } from '../../hook';
 import { ProductBasicInfosCard } from '../../../product-basic-infos-card';
 import { ProductOptionsSelect } from '../../../product-options-select';
-import type { IProductImage } from '@/app/features/products/types';
+import type { IProductImage } from '@/app/features/products/types/models';
 
 export function ProductSummary() {
   const { form } = useProductForm();

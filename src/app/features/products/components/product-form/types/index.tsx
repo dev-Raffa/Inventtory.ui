@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import type { ProductFormData } from '../schema';
-import type { IProduct } from '../../../types';
+import type { IProduct } from '../../../types/models';
 
 export type ProductFormStep = {
   name: 'BasicInfo' | 'Attributes' | 'Variants' | 'Summary';

@@ -1,6 +1,6 @@
 import { supabase } from '@/app/config/supabase';
-import type { IProduct, IProductImage } from '../types';
-import type { ICategory } from '../../category/types';
+import type { ProductDTO, IProduct } from '../types';
+import { transformSupabaseDataToIProduct } from './mappers';
 
 const selectQuery = `
   id,
@@ -11,60 +11,26 @@ const selectQuery = `
   minimum_stock,
   has_variants,
   category:categories ( id, name ),
-  attributes:product_attributes ( name, values ),
-  allImages:product_images ( id, name, src, public_id, type, is_primary ),
-  variants:product_variants (
+  product_attributes ( name, values ),
+  product_images ( id, name, src, public_id, type, is_primary ),
+  product_variants (
     id, sku, stock, minimum_stock, options,
-    images:variant_images ( image_id, is_primary )
+    variant_images ( image_id, is_primary )
   )
 `;
 
-function transformSupabaseDataToIProduct(data: any): IProduct {
-  const allImages: IProductImage[] = (data.allImages || [])
-    .map((image: any) => ({
-      ...image,
-      isPrimary: image.is_primary,
-      publicId: image.public_id
-    }))
-    .sort((a: any, b: any) =>
-      a.is_primary === b.is_primary ? 0 : a.is_primary ? -1 : 1
-    );
-
-  return {
-    id: data.id,
-    name: data.name,
-    sku: data.sku,
-    description: data.description,
-    hasVariants: data.has_variants,
-    minimumStock: data.minimum_stock,
-    stock: data.stock,
-    category: data.category as ICategory,
-    attributes: data.attributes || [],
-    allImages: allImages,
-    variants: (data.variants || []).map((v: any) => ({
-      ...v,
-
-      images: (v.images || [])
-        .map((img: any) => ({
-          id: img.image_id,
-          isPrimary: img.is_primary
-        }))
-
-        .sort((a: any, b: any) =>
-          a.isPrimary === b.isPrimary ? 0 : a.isPrimary ? -1 : 1
-        )
-    }))
-  };
-}
-
 async function getAll(): Promise<IProduct[]> {
-  const { data, error } = await supabase.from('products').select(selectQuery);
+  const { data, error } = await supabase
+    .from('products')
+    .select(selectQuery)
+    .overrideTypes<Array<ProductDTO>, { merge: false }>();
 
   if (error) {
     throw new Error('Falha ao buscar produtos');
   }
 
-  const products: IProduct[] = data.map(transformSupabaseDataToIProduct);
+  const products = data.map(transformSupabaseDataToIProduct);
+
   return products;
 }
 
@@ -73,7 +39,8 @@ async function getOneById(id: string): Promise<IProduct> {
     .from('products')
     .select(selectQuery)
     .eq('id', id)
-    .single();
+    .single()
+    .overrideTypes<ProductDTO, { merge: false }>();
 
   if (error) {
     throw new Error(`Erro ao buscar o produto: ${error.message}`);

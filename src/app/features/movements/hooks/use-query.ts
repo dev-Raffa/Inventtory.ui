@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { MovementService } from '../service';
-import type { CreateMovementDTO } from '../types';
+import type { CreateMovementDTO } from '../types/model';
 
 export function useMovementsQuery(filters?: { productId?: string }) {
   return useQuery({

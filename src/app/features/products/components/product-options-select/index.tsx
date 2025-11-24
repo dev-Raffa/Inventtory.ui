@@ -1,5 +1,5 @@
 import { Button } from '@/app/components/ui/button';
-import type { IProductAttribute } from '../../types';
+import type { IProductAttribute } from '../../types/models';
 import { Separator } from '@/app/components/ui/separator';
 
 type TProductOptionsSelect = {

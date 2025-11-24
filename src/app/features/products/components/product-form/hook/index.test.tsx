@@ -10,7 +10,7 @@ import * as FormReducer from './form-reducer.tsx';
 import { act } from 'react';
 import { renderHook, waitFor } from '@testing-library/react';
 import { steps } from '../steps/index.tsx';
-import type { IProduct } from '@/app/features/products/types/index.ts';
+import type { IProduct } from '@/app/features/products/types/models.ts';
 
 const {
   mockLocalStorageService,

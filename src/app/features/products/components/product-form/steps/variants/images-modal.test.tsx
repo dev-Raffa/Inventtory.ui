@@ -6,7 +6,7 @@ import { ImagesModal } from './images-modal';
 import type {
   IProductImage,
   IProductVariant
-} from '@/app/features/products/types';
+} from '@/app/features/products/types/models';
 import { type ProductFormProviderProps, useProductForm } from '../../hook';
 
 vi.mock('@/app/components/shared/image-card', () => ({

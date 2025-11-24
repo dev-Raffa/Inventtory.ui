@@ -9,7 +9,7 @@ import {
 } from '@/app/components/ui/table';
 import { Button } from '@/app/components/ui/button';
 import { ImageCard } from '@/app/components/shared/image-card';
-import type { MovementItem } from '../../../../types';
+import type { MovementItem } from '../../../../types/model';
 import { useMovementForm } from '../../hooks';
 
 export function MovementBatchList() {

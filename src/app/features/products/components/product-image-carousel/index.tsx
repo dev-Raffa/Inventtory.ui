@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
   type CarouselApi
 } from '@/app/components/ui/carousel';
-import type { IProductImage } from '../../types';
+import type { IProductImage } from '../../types/models';
 import { createCloudinaryThumbnail } from '@/app/services/image-upload/utils';
 
 export function ProductImageCarousel({ images }: { images?: IProductImage[] }) {

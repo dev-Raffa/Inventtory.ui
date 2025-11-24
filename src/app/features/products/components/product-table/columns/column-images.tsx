@@ -3,7 +3,7 @@ import {
   AvatarFallback,
   AvatarImage
 } from '@/app/components/ui/avatar';
-import type { IProduct } from '@/app/features/products/types';
+import type { IProduct } from '@/app/features/products/types/models';
 import { createCloudinaryThumbnail } from '@/app/services/image-upload/utils';
 import { memo } from 'react';
 

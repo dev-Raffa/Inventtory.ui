@@ -1,4 +1,4 @@
-import type { IProductVariant, VariantOption } from '../../../types';
+import type { IProductVariant, VariantOption } from '../../../types/models';
 
 type TGenerateVariants = {
   skuBase: string;

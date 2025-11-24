@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table';
-import type { IProduct } from '@/app/features/products/types';
+import type { IProduct } from '@/app/features/products/types/models';
 import { HeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
 import { ProductTableColumnImages } from './column-images';
 import { ProductTableColumnStock } from './column-stock';

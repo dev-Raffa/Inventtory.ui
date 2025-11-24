@@ -11,7 +11,7 @@ import {
   AvatarFallback,
   AvatarImage
 } from '@/app/components/ui/avatar';
-import type { MovementResponse } from '../../../types';
+import type { MovementResponse } from '../../../types/model';
 
 export const columnsMovementsListTable: ColumnDef<MovementResponse>[] = [
   {

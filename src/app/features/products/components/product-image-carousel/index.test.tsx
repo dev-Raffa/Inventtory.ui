@@ -1,7 +1,7 @@
 import { screen, act, fireEvent, render } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { ProductImageCarousel } from './';
-import type { IProductImage } from '../../types';
+import type { IProductImage } from '../../types/models';
 
 const mockImages: IProductImage[] = [
   {
