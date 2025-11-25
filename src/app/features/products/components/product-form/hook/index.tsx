@@ -9,12 +9,8 @@ import {
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { IProduct, IProductImage } from '../../../types/models';
-import {
-  formReducer,
-  initialState,
-  type ProductFormStepState
-} from './form-reducer';
-import type { TProductFormModes } from '../types';
+import { formReducer, initialState } from './form-reducer';
+import type { ProductFormStep, TProductFormModes } from '../types';
 import { productSchema, type ProductFormData } from '../schema';
 import { generateVariants } from '../utils';
 import {
@@ -22,12 +18,13 @@ import {
   useProductUpdateMutation
 } from '../../../hooks/use-query';
 import { uploadImageToCloudinary } from '@/app/services/image-upload';
-import { useNavigate, useSearchParams } from 'react-router';
+import { useNavigate } from 'react-router';
 import { LocalStorageService } from '@/app/services/local-storage';
+import { type WizardStep } from '@/app/components/shared/wizard';
 
 type TProductFormContext = {
   form: UseFormReturn<IProduct>;
-  stepState: ProductFormStepState;
+  steps: ProductFormStep[];
   mode: TProductFormModes;
   product?: IProduct;
   onSubmit: (data: ProductFormData) => void;
@@ -35,8 +32,7 @@ type TProductFormContext = {
   onCancel: () => void;
   handleNameChange: (name: string) => void;
   handleVariantSwitch: (checked: boolean) => void;
-  handleNextStep: (e: React.MouseEvent) => void;
-  handlePrevStep: () => void;
+  handleNextStep: (step: WizardStep) => Promise<boolean>;
 };
 
 const ProductFormContext = createContext<TProductFormContext | null>(null);
@@ -57,7 +53,6 @@ export function ProductFormProvider({
   const { mutate: createMutate } = useProductCreateMutation();
   const { mutate: updateMutae } = useProductUpdateMutation();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const savedDraft = useRef(
     LocalStorageService.getItem<IProduct>(LOCAL_STORAGE_KEY)
   );
@@ -91,14 +86,7 @@ export function ProductFormProvider({
 
   const { watch, getFieldState, getValues, setValue } = form;
 
-  const stepNameFromUrl = searchParams.get('step');
-  const [stepState, dispatch] = useReducer(formReducer, initialState);
-
-  useEffect(() => {
-    if (stepNameFromUrl && stepNameFromUrl !== stepState.currentStep?.name) {
-      dispatch({ type: 'GO_TO_STEP', payload: stepNameFromUrl });
-    }
-  }, [stepNameFromUrl, stepState.currentStep]);
+  const [steps, dispatch] = useReducer(formReducer, initialState);
 
   useEffect(() => {
     dispatch({
@@ -143,41 +131,32 @@ export function ProductFormProvider({
     });
   };
 
-  const handleNextStep = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    const isValid = await form.trigger(stepState.currentStep?.fields);
-
-    if (!isValid) {
-      return;
+  const handleNextStep = async (step: WizardStep): Promise<boolean> => {
+    if (step.id === 'BasicInfo') {
+      return await form.trigger(['name', 'sku', 'category']);
     }
 
-    if (stepState.currentStep?.name === 'Attributes') {
+    if (step.id === 'Attributes') {
+      const isValid = await form.trigger(['attributes']);
+
+      if (!isValid) return false;
+
       const variants = generateVariants({
         skuBase: getValues('sku'),
         minimumStock: getValues('minimumStock'),
-        attributes: getValues('attributes') || [],
+        attributes: getValues('attributes'),
         existingVariants: getValues('variants')
       });
 
-      form.setValue('variants', variants);
+      form.setValue('variants', variants, { shouldDirty: true });
+      return true;
     }
 
-    const nextStepIndex = stepState.stepIndex + 1;
-
-    if (nextStepIndex < stepState.totalSteps) {
-      const nextStepName = stepState.allSteps[nextStepIndex].name;
-      setSearchParams({ step: nextStepName });
+    if (step.id === 'Variants') {
+      return await form.trigger(['variants']);
     }
-  };
 
-  const handlePrevStep = () => {
-    const prevStepIndex = stepState.stepIndex - 1;
-
-    if (prevStepIndex >= 0) {
-      const prevStepName = stepState.allSteps[prevStepIndex].name;
-
-      setSearchParams({ step: prevStepName });
-    }
+    return true;
   };
 
   const onSubmit = async ({
@@ -247,14 +226,13 @@ export function ProductFormProvider({
 
   const contextValue: TProductFormContext = {
     form,
-    stepState,
+    steps,
     onSubmit,
     onCancel,
     clearFormData,
     handleVariantSwitch,
     handleNameChange,
     handleNextStep,
-    handlePrevStep,
     mode,
     product
   };

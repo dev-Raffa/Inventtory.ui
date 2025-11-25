@@ -1,162 +1,108 @@
-import { screen, render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { screen, render, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { ProductForm } from './';
-import { useProductForm } from './hook';
+import { ProductForm } from './index';
+
+const { mockUseProductForm } = vi.hoisted(() => {
+  return {
+    mockUseProductForm: vi.fn()
+  };
+});
 
 vi.mock('./hook', () => ({
-  useProductForm: vi.fn()
+  useProductForm: mockUseProductForm
 }));
 
-vi.mock('@/app/components/ui/progress', () => ({
-  Progress: ({ value }: { value: number }) => (
-    <div data-testid="progress-bar" data-value={value} />
-  )
+vi.mock('@/app/components/shared/wizard', () => ({
+  Wizard: ({ children, steps, onCancel, onBeforeNextStep }: any) => (
+    <div data-testid="wizard-root">
+      <div data-testid="steps-count">{steps?.length}</div>
+      <button data-testid="wizard-cancel-btn" onClick={onCancel}>
+        Cancel Trigger
+      </button>
+      <button data-testid="wizard-next-btn" onClick={onBeforeNextStep}>
+        Next Trigger
+      </button>
+      {children}
+    </div>
+  ),
+  WizardHeader: ({ label }: any) => (
+    <div data-testid="wizard-header">{label}</div>
+  ),
+  WizardContent: () => <div data-testid="wizard-content">Content</div>,
+  WizardControl: () => <div data-testid="wizard-control">Controls</div>
 }));
 
-const mockHookReturn = (overrides = {}) => {
-  const defaultReturn = {
-    form: {
-      handleSubmit: (fn: any) => (e: any) => {
-        e?.preventDefault();
-        fn();
-      }
-    },
-    stepState: {
-      stepIndex: 0,
-      totalSteps: 4,
-      currentStep: {
-        name: 'BasicInfo',
-        label: 'Informações Básicas',
-        component: <div data-testid="step-content">Conteúdo do Passo 1</div>
-      }
-    },
-    onSubmit: vi.fn(),
-    onCancel: vi.fn(),
-    handleNextStep: vi.fn(),
-    handlePrevStep: vi.fn(),
-    ...overrides
+describe('ProductForm', () => {
+  const mockOnSubmit = vi.fn();
+  const mockOnCancel = vi.fn();
+  const mockHandleNextStep = vi.fn();
+  const mockSteps = [
+    { id: '1', label: 'Step 1', component: <div /> },
+    { id: '2', label: 'Step 2', component: <div /> }
+  ];
+
+  const mockForm = {
+    handleSubmit: (fn: any) => (e: any) => {
+      e?.preventDefault();
+      fn();
+    }
   };
 
-  // @ts-expect-error - Simplificando tipagem para o mock
-  vi.mocked(useProductForm).mockReturnValue(defaultReturn);
-
-  return defaultReturn;
-};
-
-describe('ProductForm (Orchestrator UI)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseProductForm.mockReturnValue({
+      form: mockForm,
+      steps: mockSteps,
+      onSubmit: mockOnSubmit,
+      onCancel: mockOnCancel,
+      handleNextStep: mockHandleNextStep
+    });
   });
 
-  it('must render the first step correctly (Back button disabled)', () => {
-    mockHookReturn({
-      stepState: {
-        stepIndex: 0,
-        totalSteps: 4,
-        currentStep: {
-          name: 'BasicInfo',
-          label: 'Info',
-          component: <div>Step 1</div>
-        }
-      }
-    });
-
+  it('should render the form structure and Wizard components', () => {
     render(<ProductForm label="Criar Produto" />);
 
-    expect(screen.getByText('Criar Produto')).toBeInTheDocument();
-    expect(screen.getByText('Info')).toBeInTheDocument();
+    const form = document.querySelector('form');
 
-    const backButton = screen.getByRole('button', { name: /Voltar/i });
-
-    expect(backButton).toBeDisabled();
-
-    expect(
-      screen.getByRole('button', { name: /Avançar/i })
-    ).toBeInTheDocument();
-
-    expect(
-      screen.queryByRole('button', { name: /Salvar Produto/i })
-    ).not.toBeInTheDocument();
-
-    expect(screen.getByTestId('progress-bar')).toHaveAttribute(
-      'data-value',
-      '25'
+    expect(form).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-header')).toHaveTextContent(
+      'Criar Produto'
     );
+    expect(screen.getByTestId('wizard-content')).toBeInTheDocument();
+    expect(screen.getByTestId('wizard-control')).toBeInTheDocument();
   });
 
-  it('should render an intermediate step (Buttons enabled)', async () => {
-    const mockValues = mockHookReturn({
-      stepState: {
-        stepIndex: 1,
-        totalSteps: 4,
-        currentStep: {
-          name: 'Attributes',
-          label: 'Atributos',
-          component: <div>Step 2</div>
-        }
-      }
-    });
-
+  it('should pass the correct props to the Wizard', () => {
     render(<ProductForm label="Criar Produto" />);
 
-    const user = userEvent.setup();
-    const backButton = screen.getByRole('button', { name: /Voltar/i });
-    const nextButton = screen.getByRole('button', { name: /Avançar/i });
-
-    expect(backButton).toBeEnabled();
-    expect(nextButton).toBeInTheDocument();
-
-    await user.click(nextButton);
-    await user.click(backButton);
-
-    expect(mockValues.handleNextStep).toHaveBeenCalled();
-    expect(mockValues.handlePrevStep).toHaveBeenCalled();
+    expect(screen.getByTestId('steps-count')).toHaveTextContent('2');
   });
 
-  it('The last step should be rendered (Save button visible)', async () => {
-    const mockValues = mockHookReturn({
-      stepState: {
-        stepIndex: 3,
-        totalSteps: 4,
-        currentStep: {
-          name: 'Summary',
-          label: 'Resumo',
-          component: <div>Resumo</div>
-        }
-      }
-    });
-
+  it('should call onCancel when the Wizard triggers cancel', () => {
     render(<ProductForm label="Criar Produto" />);
 
-    const user = userEvent.setup();
+    const cancelBtn = screen.getByTestId('wizard-cancel-btn');
+    fireEvent.click(cancelBtn);
 
-    expect(
-      screen.queryByRole('button', { name: /Avançar/i })
-    ).not.toBeInTheDocument();
-
-    const saveButton = screen.getByRole('button', { name: /Salvar Produto/i });
-
-    expect(saveButton).toBeInTheDocument();
-    expect(screen.getByTestId('progress-bar')).toHaveAttribute(
-      'data-value',
-      '100'
-    );
-
-    await user.click(saveButton);
-
-    expect(mockValues.onSubmit).toHaveBeenCalled();
+    expect(mockOnCancel).toHaveBeenCalledTimes(1);
   });
 
-  it('The `onCancel` call should be activated when the Cancel button is clicked', async () => {
-    const mockValues = mockHookReturn();
-
+  it('should call handleNextStep when the Wizard triggers next step validation', () => {
     render(<ProductForm label="Criar Produto" />);
 
-    const user = userEvent.setup();
+    const nextBtn = screen.getByTestId('wizard-next-btn');
+    fireEvent.click(nextBtn);
 
-    await user.click(screen.getByRole('button', { name: /Cancelar/i }));
+    expect(mockHandleNextStep).toHaveBeenCalledTimes(1);
+  });
 
-    expect(mockValues.onCancel).toHaveBeenCalled();
+  it('should call onSubmit when the form is submitted', () => {
+    render(<ProductForm label="Criar Produto" />);
+
+    const form = document.querySelector('form');
+    fireEvent.submit(form!);
+
+    expect(mockOnSubmit).toHaveBeenCalledTimes(1);
   });
 });

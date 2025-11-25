@@ -4,30 +4,30 @@ import { ProductAttributes } from './attributes';
 import { ProductVariants } from './variants';
 import { ProductSummary } from './summary';
 
-export const steps: ProductFormStep[] = [
+export const stepsWithoutVariants: ProductFormStep[] = [
   {
-    name: 'BasicInfo',
+    id: 'BasicInfo',
     label: 'Informações Básicas',
-    component: <ProductBasicInfo key="StepBasicInfo" />,
-    fields: ['name', 'sku', 'category']
+    component: <ProductBasicInfo key="StepBasicInfo" />
   },
   {
-    name: 'Attributes',
-    label: 'Atributos',
-    component: <ProductAttributes key="StepAttributes" />,
-    //@ts-expect-error attributes
-    fields: ['attributes']
-  },
-  {
-    name: 'Variants',
-    label: 'Variantes',
-    component: <ProductVariants key="StepVariants" />,
-    //@ts-expect-error variants
-    fields: ['variants']
-  },
-  {
-    name: 'Summary',
+    id: 'Summary',
     label: 'Resumo',
     component: <ProductSummary key="StepSummary" />
   }
+];
+
+export const stepsWithVariants: ProductFormStep[] = [
+  stepsWithoutVariants[0],
+  {
+    id: 'Attributes',
+    label: 'Atributos',
+    component: <ProductAttributes key="StepAttributes" />
+  },
+  {
+    id: 'Variants',
+    label: 'Variantes',
+    component: <ProductVariants key="StepVariants" />
+  },
+  stepsWithoutVariants[1]
 ];
