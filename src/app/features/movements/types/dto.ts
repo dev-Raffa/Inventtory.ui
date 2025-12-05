@@ -39,5 +39,9 @@ export interface MovementDTO {
   reason: string;
   document_number: string | null;
   total_quantity: number;
+  profiles?: {
+    full_name: string;
+    avatar_url?: string;
+  } | null;
   movement_items: MovementItemDTO[];
 }

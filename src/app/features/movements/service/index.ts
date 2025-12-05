@@ -1,7 +1,7 @@
 import { supabase } from '@/app/config/supabase';
 import type { CreateMovementDTO, MovementResponse } from '../types/model';
-import { mapToMovementResponse } from './mapper';
-import type { MovementDTO } from '../types';
+import { MovementMapper } from './mapper';
+import type { MovementDTO } from '../types/dto';
 
 interface GetAllFilters {
   productId?: string;
@@ -14,6 +14,7 @@ const SelectQuery = `
   reason,
   document_number,
   total_quantity,
+  profiles:user_id ( full_name, avatar_url ),
   movement_items!inner (
     id,
     quantity,
@@ -53,7 +54,7 @@ async function getAll(filters?: GetAllFilters): Promise<MovementResponse[]> {
     throw new Error(`Erro ao buscar movimentações: ${error.message}`);
   }
 
-  return data.map(mapToMovementResponse);
+  return data.map(MovementMapper.toDomain);
 }
 
 async function create(payload: CreateMovementDTO): Promise<void> {

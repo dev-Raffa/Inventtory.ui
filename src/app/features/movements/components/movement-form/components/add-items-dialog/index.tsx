@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -19,87 +18,37 @@ import {
 import { Input } from '@/app/components/ui/input';
 import { Button } from '@/app/components/ui/button';
 import { Badge } from '@/app/components/ui/badge';
-import type {
-  IProduct,
-  IProductVariant
-} from '@/app/features/products/types/models';
+import type { IProduct } from '@/app/features/products/types/models';
 import type { MovementItem } from '@/app/features/movements/types/model';
 import { getProductImage } from '../../utils';
+import { useMovementForm } from '../../hooks';
+import { useAddItems } from './use-add-items';
+import { formatVariantOptions } from '@/app/features/products/utils';
 
-interface AddVariantsDialogProps {
+interface AddItemsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   product: IProduct | null;
   onAdd: (items: MovementItem[]) => void;
 }
 
-export function AddVariantsDialog({
+export function AddItemsDialog({
   open,
   onOpenChange,
   product,
   onAdd
-}: AddVariantsDialogProps) {
-  const [quantities, setQuantities] = useState<Record<string, number>>({});
-
-  useEffect(() => {
-    if (open) {
-      setQuantities({});
-    }
-  }, [open, product]);
+}: AddItemsDialogProps) {
+  const { form } = useMovementForm();
+  const isWithdrawal = form.watch('type') === 'withdrawal';
+  const { quantities, totalQuantity, handleQuantityChange, handleAdd } =
+    useAddItems({
+      product,
+      isOpen: open,
+      isWithdrawal,
+      onConfirm: onAdd
+    });
 
   if (!product) return null;
-
-  const handleQuantityChange = (variantId: string, value: string) => {
-    const qty = Number.parseInt(value) || 0;
-    setQuantities((prev) => ({
-      ...prev,
-      [variantId]: qty
-    }));
-  };
-
-  const convertOptionsToVariantName = (options: IProductVariant['options']) => {
-    let name = '';
-    options.map((option) => (name += `${option.name}-${option.value} `));
-    return name;
-  };
-
-  const handleAdd = () => {
-    let itemsToAdd: MovementItem[];
-
-    if (product.hasVariants) {
-      itemsToAdd =
-        product.variants
-          ?.filter((v) => (quantities[v.id ? v.id : 0] || 0) > 0)
-          .map((v) => {
-            const variantImage = getProductImage(
-              product.allImages,
-              v.images[0].id
-            );
-            return {
-              productId: product.id || '',
-              productName: product.name,
-              productImage: variantImage?.src,
-              variantId: v.id,
-              variantName: convertOptionsToVariantName(v.options),
-              currentStock: v.stock || 0,
-              quantity: quantities[v.id ? v.id : 0]
-            };
-          }) || [];
-    } else {
-      itemsToAdd = [
-        {
-          productId: product.id || '',
-          currentStock: product.stock || 0,
-          productName: product.name,
-          quantity: quantities[product.id ? product.id : ''],
-          productImage: product.allImages?.[0].src
-        }
-      ];
-    }
-    onAdd(itemsToAdd);
-  };
-
-  const totalQuantity = Object.values(quantities).reduce((a, b) => a + b, 0);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,6 +66,11 @@ export function AddVariantsDialog({
             <span className="text-sm text-muted-foreground">
               SKU Base: {product.sku}
             </span>
+            {isWithdrawal && (
+              <Badge variant="destructive" className="w-fit mt-1">
+                Modo Saída: Limite de Estoque Ativo
+              </Badge>
+            )}
           </div>
         </DialogHeader>
 
@@ -146,24 +100,35 @@ export function AddVariantsDialog({
                     <Input
                       type="number"
                       min="0"
+                      max={isWithdrawal ? product.stock : undefined}
                       placeholder="0"
-                      className="text-right h-10 text-lg"
-                      value={quantities[product.id ? product.id : 0]}
+                      className={`text-right h-10 text-lg ${
+                        isWithdrawal &&
+                        quantities[product.id!] === product.stock
+                          ? 'text-red-600 font-bold border-red-200 bg-red-50'
+                          : ''
+                      }`}
+                      value={quantities[product.id!] || ''}
                       onChange={(e) =>
                         handleQuantityChange(
-                          product.id ? product.id : '',
-                          e.target.value
+                          product.id!,
+                          e.target.value,
+                          product.stock || 0
                         )
                       }
                     />
                   </TableCell>
                 </TableRow>
               )}
+
               {product.variants?.map((variant) => {
                 const variantImage = getProductImage(
                   product.allImages,
                   variant.images[0].id
                 );
+                const currentQty = quantities[variant.id!];
+                const maxStock = variant.stock || 0;
+
                 return (
                   <TableRow key={variant.id}>
                     <TableCell>
@@ -176,22 +141,36 @@ export function AddVariantsDialog({
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {convertOptionsToVariantName(variant.options)}
+                      {formatVariantOptions(variant.options)}
                     </TableCell>
                     <TableCell className="text-center">
-                      <Badge variant="secondary">{variant.stock} un.</Badge>
+                      <Badge
+                        variant={
+                          currentQty === maxStock && isWithdrawal
+                            ? 'destructive'
+                            : 'secondary'
+                        }
+                      >
+                        {variant.stock} un.
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Input
                         type="number"
                         min="0"
+                        max={isWithdrawal ? maxStock : undefined}
                         placeholder="0"
-                        className="text-right h-10 text-lg"
-                        value={quantities[variant.id ? variant.id : 0]}
+                        className={`text-right h-10 text-lg ${
+                          isWithdrawal && currentQty === maxStock
+                            ? 'text-red-600 font-bold border-red-200 bg-red-50'
+                            : ''
+                        }`}
+                        value={currentQty || ''}
                         onChange={(e) =>
                           handleQuantityChange(
-                            variant.id ? variant.id : '',
-                            e.target.value
+                            variant.id!,
+                            e.target.value,
+                            maxStock
                           )
                         }
                       />

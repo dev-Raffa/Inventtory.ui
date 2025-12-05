@@ -3,7 +3,7 @@ import { MovementFormHeader } from './components/header';
 import { ProductSearch } from './components/product-search';
 import { MovementBatchList } from './components/movement-batch-list';
 import { MovementFormFooter } from './components/footer';
-import { AddVariantsDialog } from './components/add-items-dialog';
+import { AddItemsDialog } from './components/add-items-dialog';
 
 export function MovementForm() {
   const { form, actions, products, selectedProduct, isDialogOpen } =
@@ -35,7 +35,7 @@ export function MovementForm() {
 
       <MovementFormFooter />
 
-      <AddVariantsDialog
+      <AddItemsDialog
         open={isDialogOpen}
         onOpenChange={actions.toggleDialog}
         product={selectedProduct}

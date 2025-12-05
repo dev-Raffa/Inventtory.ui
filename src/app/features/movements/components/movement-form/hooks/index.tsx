@@ -18,6 +18,7 @@ import type {
 import { ReasonOptions, type reason } from '../consts';
 import type { IProduct } from '@/app/features/products/types/models';
 import { useProductsQuery } from '@/app/features/products/hooks/use-query';
+import { toast } from 'sonner';
 
 interface MovementFormContextType {
   form: UseFormReturn<MovementFormData>;
@@ -74,7 +75,9 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
         setIsDialogOpen(true);
         setSearchParams((prev) => {
           const newParams = new URLSearchParams(prev);
+
           newParams.delete('preselect');
+
           return newParams;
         });
       }
@@ -83,6 +86,7 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
 
   const onChangeType = (type: MovementType) => {
     form.setValue('type', type);
+
     setReasonOptions(ReasonOptions[`${type}`]);
   };
 
@@ -93,7 +97,6 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
 
   const toggleDialog = (open: boolean) => {
     setIsDialogOpen(open);
-
     if (!open) setSelectedProduct(null);
   };
 
@@ -120,9 +123,11 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
 
     if (data.time) {
       const [hours, minutes] = data.time.split(':').map(Number);
+
       combinedDate.setHours(hours, minutes);
     } else {
       const now = new Date();
+
       combinedDate.setHours(now.getHours(), now.getMinutes());
     }
 
@@ -139,16 +144,35 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      await createMutation.mutateAsync(payload);
+      const promise = createMutation.mutateAsync(payload);
+
+      toast.promise(promise, {
+        loading: 'Registrando movimentação...',
+        success: 'Estoque atualizado com sucesso!',
+        error: (err: any) => {
+          if (
+            err.message?.includes('check_variant_stock_non_negative') ||
+            err.message?.includes('check_stock_non_negative')
+          ) {
+            return 'Erro Crítico: Estoque insuficiente no servidor. Recarregue a página.';
+          }
+          return 'Erro ao salvar movimentação. Tente novamente.';
+        }
+      });
+
+      await promise;
+
       form.reset();
+
       navigate('/movements');
     } catch (error) {
-      console.error(error);
+      console.error('Erro no submit:', error);
     }
   };
 
   const handleCancel = () => {
     form.reset();
+
     navigate('/movements');
   };
 

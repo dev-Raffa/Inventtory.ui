@@ -25,7 +25,7 @@ export interface CreateMovementDTO {
   type: MovementType;
   date: Date;
   reason: string;
-  user?: Pick<User, 'avatar' | 'name' | 'initials'>;
+  user?: Pick<User, 'avatarUrl' | 'fullName'>;
   documentNumber?: string;
   items: {
     variantId?: string;

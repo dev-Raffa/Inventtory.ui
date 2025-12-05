@@ -1,64 +1,72 @@
-import type { MovementDTO } from '../types';
+import type { MovementDTO, MovementItemDTO } from '../types/dto';
 import type { MovementResponse } from '../types/model';
 
-export function mapToMovementResponse(data: MovementDTO): MovementResponse {
-  return {
-    id: data.id,
-    date: data.date,
-    type: data.type,
-    reason: data.reason,
-    documentNumber: data.document_number || undefined,
-    totalQuantity: data.total_quantity,
-    user: {
-      name: 'Usuário',
-      initials: 'US'
-    },
-    items: data.movement_items?.map((item) => {
-      let imageUrl = '';
+const getInitials = (name: string) => {
+  return (
+    name
+      .match(/(^\S\S?|\b\S)?/g)
+      ?.join('')
+      .match(/(^\S|\S$)?/g)
+      ?.join('')
+      .toUpperCase() || 'US'
+  );
+};
 
-      if (item.variant_id && item.product_variants) {
-        const primaryVarImg = item.product_variants.variant_images?.find(
-          (vi) => vi.is_primary
-        );
+const resolveItemImage = (item: MovementItemDTO): string => {
+  if (item.variant_id && item.product_variants?.variant_images) {
+    const primaryVarImg = item.product_variants.variant_images.find(
+      (vi) => vi.is_primary
+    );
 
-        if (primaryVarImg?.product_images) {
-          imageUrl = primaryVarImg.product_images.src;
-        } else if (item.products?.product_images?.length > 0) {
-          const primaryProdImg = item.products.product_images.find(
-            (pi) => pi.is_primary
-          );
-          imageUrl = primaryProdImg
-            ? primaryProdImg.src
-            : item.products.product_images[0].src;
-        }
-      } else {
-        const primaryProdImg = item.products?.product_images?.find(
-          (pi: any) => pi.is_primary
-        );
+    if (primaryVarImg?.product_images?.src)
+      return primaryVarImg.product_images.src;
+  }
 
-        if (primaryProdImg) {
-          imageUrl = primaryProdImg.src;
-        }
-      }
+  if (item.products?.product_images?.length) {
+    const primaryProdImg = item.products.product_images.find(
+      (pi) => pi.is_primary
+    );
 
-      let variantLabel = '';
+    return primaryProdImg
+      ? primaryProdImg.src
+      : item.products.product_images[0].src;
+  }
 
-      if (item.product_variants?.options) {
-        variantLabel = item.product_variants.options
-          .map((opt) => opt.value)
-          .join(' / ');
-      }
+  return '';
+};
 
-      return {
-        id: item.id,
-        productId: item.product_id,
-        productName: item.products?.name,
-        variantId: item.variant_id,
-        variantAttributes: variantLabel,
-        productImage: imageUrl,
-        quantity: item.quantity,
-        currentStock: item.current_stock
-      };
-    })
-  };
-}
+export const MovementMapper = {
+  toDomain(data: MovementDTO): MovementResponse {
+    const userName = data.profiles?.full_name || 'Desconhecido';
+
+    return {
+      id: data.id,
+      date: data.date,
+      type: data.type,
+      reason: data.reason,
+      documentNumber: data.document_number || undefined,
+      totalQuantity: data.total_quantity,
+      user: {
+        name: userName,
+        initials: getInitials(userName),
+        avatar: data.profiles?.avatar_url
+      },
+      items: data.movement_items?.map((item) => {
+        const variantLabel = item.product_variants?.options
+          ? item.product_variants.options.map((opt) => opt.value).join(' / ')
+          : '';
+
+        return {
+          id: item.id,
+          productId: item.product_id,
+          productName: item.products?.name,
+          variantId: item.variant_id,
+          variantAttributes: variantLabel,
+          productImage: resolveItemImage(item),
+          quantity: item.quantity,
+          currentStock: item.current_stock
+        };
+      })
+    };
+  }
+};
