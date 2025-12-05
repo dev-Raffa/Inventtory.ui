@@ -4,7 +4,7 @@ import { Button } from '@/app/components/ui/button';
 import { cn } from '@/lib/utils';
 import { useWizard } from '../../hooks';
 
-interface WizardFooterProps extends ComponentProps<'div'> {
+interface WizardControlProps extends ComponentProps<'div'> {
   labels?: {
     next?: string;
     back?: string;
@@ -17,7 +17,7 @@ export function WizardControl({
   className,
   labels,
   ...props
-}: WizardFooterProps) {
+}: WizardControlProps) {
   const { state, actions } = useWizard();
 
   return (
@@ -50,14 +50,22 @@ export function WizardControl({
         </Button>
 
         {state.isLastStep ? (
-          <Button onClick={actions.handleFinish} disabled={state.isLoading}>
+          <Button
+            type="button"
+            onClick={actions.handleFinish}
+            disabled={state.isLoading}
+          >
             {state.isLoading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}
             {labels?.finish || 'Finalizar'}
           </Button>
         ) : (
-          <Button onClick={actions.nextStep} disabled={state.isLoading}>
+          <Button
+            type="button"
+            onClick={actions.nextStep}
+            disabled={state.isLoading}
+          >
             {state.isLoading && (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             )}

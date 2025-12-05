@@ -82,6 +82,7 @@ export function WizardProvider({
 
     if (onBeforeNextStep) {
       const canProceed = await onBeforeNextStep(currentStep);
+      setIsLoading(false);
 
       if (!canProceed) return;
     }
@@ -110,7 +111,7 @@ export function WizardProvider({
 
     setIsLoading(true);
 
-    await onFinish?.();
+    await onFinish();
 
     setIsLoading(false);
   };

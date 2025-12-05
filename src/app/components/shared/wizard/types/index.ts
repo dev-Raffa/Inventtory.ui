@@ -33,7 +33,6 @@ export interface WizardRootProps {
   steps: WizardStep[];
   urlParamKey?: string;
   onBeforeNextStep?: (step: WizardStep) => Promise<boolean> | boolean;
-
-  onFinish?: () => void | Promise<void>;
+  onFinish: () => void | Promise<void>;
   onCancel?: () => void;
 }
