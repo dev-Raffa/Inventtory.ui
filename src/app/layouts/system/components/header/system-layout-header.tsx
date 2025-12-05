@@ -1,11 +1,7 @@
-import { Logo } from '@/app/components/shared/logo/logo';
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage
-} from '@/app/components/ui/avatar';
-import { Button } from '@/app/components/ui/button';
 import { BellIcon } from 'lucide-react';
+import { Logo } from '@/app/components/shared/logo/logo';
+import { Button } from '@/app/components/ui/button';
+import { UserNav } from '../user-nav';
 
 export const SystemLayoutHeader = () => {
   return (
@@ -19,10 +15,7 @@ export const SystemLayoutHeader = () => {
         >
           <BellIcon />
         </Button>
-        <Avatar className="cursor-pointer size-9">
-          <AvatarImage></AvatarImage>
-          <AvatarFallback className="bg-white ">US</AvatarFallback>
-        </Avatar>
+        <UserNav />
       </section>
     </header>
   );
