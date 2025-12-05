@@ -20,7 +20,7 @@ export function AuthLayout() {
               </div>
               <p className="text-lg">
                 &ldquo;O Inventto transformou a maneira como gerenciamos nosso
-                estoque. Deixamos de perder vendas por fura de estoque em menos
+                estoque. Deixamos de perder vendas por falta de estoque em menos
                 de 3 meses de uso.&rdquo;
               </p>
               <footer className="text-sm text-zinc-400">

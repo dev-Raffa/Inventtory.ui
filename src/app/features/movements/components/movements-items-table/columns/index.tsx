@@ -36,7 +36,7 @@ export const columnsMovementsItemsTable: ColumnDef<MovementItemResponse>[] = [
   },
   {
     accessorKey: 'quantity',
-    header: 'Quantity',
+    header: 'Quantidade',
     cell: (cellContext: CellContext<MovementItemResponse, unknown>) => {
       const parent = cellContext.table.options.meta
         ?.parentData as MovementResponse;
