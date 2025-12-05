@@ -43,7 +43,6 @@ describe('ProductBasicInfosCard', () => {
       description: 'Desc.'
     };
 
-    // @ts-expect-error - Forçando undefined para testar a robustez, caso a tipagem permita ou venha de API
     render(<ProductBasicInfosCard {...props} />);
 
     expect(screen.getByText('SKU: N/A')).toBeInTheDocument();
