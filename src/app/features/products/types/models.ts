@@ -1,4 +1,4 @@
-import type { ICategory } from '../../category/types';
+import type { Category } from '../../category/types';
 
 export interface IProductAttribute {
   name: string;
@@ -38,7 +38,7 @@ interface IProductWithVariants {
   name: string;
   sku: string;
   description?: string;
-  category: ICategory;
+  category: Category;
   minimumStock?: number;
   stock?: number;
   hasVariants: true;
@@ -52,7 +52,7 @@ export interface IProductWithoutVariants {
   name: string;
   sku: string;
   description?: string;
-  category: ICategory;
+  category: Category;
   minimumStock?: number;
   stock?: number;
   hasVariants: false;

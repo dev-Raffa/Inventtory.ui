@@ -58,7 +58,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
       return cell.row.original.stock && !cell.row.original.hasVariants ? (
         <ProductTableColumnStock
           totalStock={cell.row.original.stock}
-          minimunStock={cell.row.original.minimumStock}
+          minimumStock={cell.row.original.minimumStock}
         />
       ) : null;
     }

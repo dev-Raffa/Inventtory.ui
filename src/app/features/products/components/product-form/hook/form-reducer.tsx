@@ -29,14 +29,19 @@ export function formReducer(
     case 'INITIALIZE': {
       const { hasVariants } = action.payload;
 
-      return hasVariants ? stepsWithVariants : stepsWithoutVariants;
+      steps = hasVariants ? stepsWithVariants : stepsWithoutVariants;
+
+      return steps;
     }
 
     case 'UPDATE_VARIANT_MODE': {
       const { hasVariants } = action.payload;
 
-      return hasVariants ? stepsWithVariants : stepsWithoutVariants;
+      steps = hasVariants ? stepsWithVariants : stepsWithoutVariants;
+
+      return steps;
     }
+
     default: {
       const exhaustiveCheck: never = action;
       throw new Error(`Ação não tratada: ${exhaustiveCheck}`);

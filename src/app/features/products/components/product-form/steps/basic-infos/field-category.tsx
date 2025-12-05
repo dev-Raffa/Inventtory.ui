@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Check, ChevronsUpDown, PlusCircle } from 'lucide-react';
+import { Check, ChevronsUpDown, PlusCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/app/components/ui/button';
 
@@ -27,22 +26,22 @@ import {
 } from '@/app/components/ui/form';
 
 import { useProductForm } from '../../hook';
-import { useCategoriesQuery } from '@/app/features/category/hooks/use-query';
+import { useCategoryField } from './use-category-field';
 
 export function ProductFormFieldCategory() {
-  const { data: categories } = useCategoriesQuery();
   const { form } = useProductForm();
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const filteredCategories = categories?.filter((cat) =>
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const exactMatch = categories?.some(
-    (cat) => cat.name.toLowerCase() === searchQuery.toLowerCase()
-  );
-  const showCreateOption = searchQuery.length > 0 && !exactMatch;
+  const {
+    open,
+    setOpen,
+    searchQuery,
+    setSearchQuery,
+    filteredCategories,
+    showCreateOption,
+    isCreating,
+    handleCreateCategory
+  } = useCategoryField({
+    onSelect: (newCategory) => form.setValue('category', newCategory)
+  });
 
   return (
     <FormField
@@ -78,10 +77,18 @@ export function ProductFormFieldCategory() {
                   onValueChange={setSearchQuery}
                 />
                 <CommandList>
-                  <CommandEmpty>{'Nenhuma categoria encontrada.'}</CommandEmpty>
+                  <CommandEmpty>
+                    {isCreating ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Criando...
+                      </span>
+                    ) : (
+                      'Nenhuma categoria encontrada.'
+                    )}
+                  </CommandEmpty>
 
                   <CommandGroup>
-                    {filteredCategories?.map((cat) => (
+                    {filteredCategories.map((cat) => (
                       <CommandItem
                         key={cat.id}
                         value={cat.name}
@@ -104,14 +111,15 @@ export function ProductFormFieldCategory() {
                     ))}
                   </CommandGroup>
 
-                  {showCreateOption && (
+                  {showCreateOption && !isCreating && (
                     <CommandGroup>
                       <CommandItem
                         value={searchQuery}
-                        className="text-primary cursor-pointer"
+                        onSelect={handleCreateCategory}
+                        className="text-green-700 cursor-pointer font-medium"
                       >
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Criar nova categoria: "{searchQuery}"
+                        Criar nova: "{searchQuery}"
                       </CommandItem>
                     </CommandGroup>
                   )}

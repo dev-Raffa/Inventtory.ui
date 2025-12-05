@@ -1,10 +1,11 @@
-import type { IProduct } from '../types/models';
+import type { IProduct, IProductVariant } from '../types';
 
 type TGetVariantImages = {
   allImages: IProduct['allImages'];
   variantImagesId: Set<string>;
   primaryImageVariantId?: string;
 };
+
 export function getVariantImages({
   allImages,
   variantImagesId,
@@ -25,3 +26,7 @@ export function getVariantImages({
       return 0;
     });
 }
+
+export const formatVariantOptions = (options: IProductVariant['options']) => {
+  return options.map((opt) => `${opt.name}: ${opt.value}`).join(' / ');
+};

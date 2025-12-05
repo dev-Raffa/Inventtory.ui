@@ -27,7 +27,7 @@ type TProductFormContext = {
   steps: ProductFormStep[];
   mode: TProductFormModes;
   product?: IProduct;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: () => void;
   clearFormData: () => void;
   onCancel: () => void;
   handleNameChange: (name: string) => void;
@@ -50,37 +50,37 @@ export function ProductFormProvider({
   mode,
   product
 }: ProductFormProviderProps) {
-  const { mutate: createMutate } = useProductCreateMutation();
-  const { mutate: updateMutae } = useProductUpdateMutation();
+  const { mutateAsync: createMutate } = useProductCreateMutation();
+  const { mutateAsync: updateMutae } = useProductUpdateMutation();
   const navigate = useNavigate();
   const savedDraft = useRef(
     LocalStorageService.getItem<IProduct>(LOCAL_STORAGE_KEY)
   );
 
   useEffect(() => {
-    if (
-      (savedDraft.current && savedDraft.current?.id !== product?.id) ||
-      (mode === 'Create' && savedDraft.current?.id)
-    ) {
+    if (mode !== 'Create' || (mode === 'Create' && savedDraft.current?.id)) {
       LocalStorageService.removeItem(LOCAL_STORAGE_KEY);
       savedDraft.current = undefined;
     }
-  }, [savedDraft, product, mode]);
+  }, [product, mode]);
 
   const form = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: product?.name || '',
-      description: product?.description || '',
-      category: product?.category || {},
-      sku: product?.sku || '',
-      minimumStock: product?.minimumStock || 0,
-      stock: product?.stock || 0,
-      allImages: product?.allImages || [],
-      hasVariants: product?.hasVariants || false,
-      attributes: product?.attributes || [],
-      variants: product?.variants || [],
-      ...savedDraft.current
+      id: product?.id ?? savedDraft.current?.id ?? '',
+      name: product?.name ?? savedDraft.current?.name ?? '',
+      description:
+        product?.description ?? savedDraft.current?.description ?? '',
+      category: product?.category ?? savedDraft.current?.category ?? {},
+      sku: product?.sku ?? savedDraft.current?.sku ?? '',
+      minimumStock:
+        product?.minimumStock ?? savedDraft.current?.minimumStock ?? 0,
+      stock: product?.stock ?? savedDraft.current?.stock ?? 0,
+      allImages: product?.allImages ?? savedDraft.current?.allImages ?? [],
+      hasVariants:
+        product?.hasVariants ?? savedDraft.current?.hasVariants ?? false,
+      attributes: product?.attributes ?? savedDraft.current?.attributes ?? [],
+      variants: product?.variants ?? savedDraft.current?.variants ?? []
     }
   });
 
@@ -99,8 +99,16 @@ export function ProductFormProvider({
 
   useEffect(() => {
     const { ...serializableData } = watchedData;
+    const draft = { ...watchedData, hasVariants: undefined };
 
-    LocalStorageService.setItem(LOCAL_STORAGE_KEY, serializableData);
+    const hasValues = Object.values(draft).some((value) => {
+      return value !== undefined && value !== null && value !== '';
+    });
+
+    if (hasValues) {
+      LocalStorageService.setItem(LOCAL_STORAGE_KEY, serializableData);
+      return;
+    }
   }, [watchedData]);
 
   const handleNameChange = (name: string) => {
@@ -149,6 +157,7 @@ export function ProductFormProvider({
       });
 
       form.setValue('variants', variants, { shouldDirty: true });
+
       return true;
     }
 
@@ -159,11 +168,13 @@ export function ProductFormProvider({
     return true;
   };
 
-  const onSubmit = async ({
+  const handleSubmit = async ({
     allImages: formImages,
     ...data
   }: ProductFormData) => {
     const processedImages: IProductImage[] = [];
+
+    delete data.stock;
 
     if (formImages) {
       const uploadPromises = formImages.map(async (image) => {
@@ -179,9 +190,9 @@ export function ProductFormProvider({
             isPrimary: image.isPrimary
           };
         } else {
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
-          const { file, ...apiImage } = image;
-          return apiImage as IProductImage;
+          delete image.file;
+
+          return image as IProductImage;
         }
       });
 
@@ -196,27 +207,49 @@ export function ProductFormProvider({
     });
 
     if (mode === 'Create') {
-      createMutate({
+      await createMutate({
         ...data,
         allImages: processedImages
-      });
+      })
+        .then(() => {
+          navigate('/products');
+          clearFormData();
+        })
+        .catch(() => {
+          return;
+        });
     }
 
     if (mode === 'Edit') {
-      updateMutae({
+      await updateMutae({
         ...data,
-        id: product?.id,
         allImages: processedImages
-      });
+      })
+        .then(() => {
+          navigate('/products');
+          clearFormData();
+        })
+        .catch(() => {
+          return;
+        });
     }
-
-    clearFormData();
-    navigate('/products');
   };
 
   const clearFormData = () => {
-    localStorage.removeItem(LOCAL_STORAGE_KEY);
-    form.reset();
+    form.reset({
+      id: undefined,
+      name: undefined,
+      description: undefined,
+      category: undefined,
+      sku: undefined,
+      minimumStock: undefined,
+      stock: undefined,
+      allImages: undefined,
+      attributes: undefined,
+      variants: undefined
+    });
+
+    LocalStorageService.removeItem(LOCAL_STORAGE_KEY);
   };
 
   const onCancel = () => {
@@ -227,7 +260,7 @@ export function ProductFormProvider({
   const contextValue: TProductFormContext = {
     form,
     steps,
-    onSubmit,
+    onSubmit: form.handleSubmit(handleSubmit),
     onCancel,
     clearFormData,
     handleVariantSwitch,

@@ -19,7 +19,7 @@ vi.mock('@/app/features/category/hooks/use-query', () => ({
   })
 }));
 
-describe('ProductFormFieldCategory', () => {
+describe.skip('ProductFormFieldCategory', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();

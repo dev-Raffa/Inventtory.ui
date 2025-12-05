@@ -18,26 +18,30 @@ export function useProductByIDQuery(productId: string) {
 }
 
 export function useProductCreateMutation() {
-  const { invalidateQueries } = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['createProduct'],
     mutationFn: ProductService.add,
+    meta: { successMessage: 'Produto criado com sucesso' },
     onSuccess: () => {
-      invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     }
   });
 }
 
 export function useProductUpdateMutation() {
-  const { invalidateQueries } = useQueryClient();
+  const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ['UpdateProduct'],
     mutationFn: ProductService.update,
+    meta: { successMessage: 'Produto atualizado com sucesso' },
     onSuccess: (data) => {
-      invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
 
       if (data.id) {
-        invalidateQueries({ queryKey: ['product', data.id] });
+        queryClient.invalidateQueries({ queryKey: ['product', data.id] });
       }
     }
   });

@@ -1,6 +1,6 @@
 import { supabase } from '@/app/config/supabase';
 import type { ProductDTO, IProduct } from '../types';
-import { transformSupabaseDataToIProduct } from './mappers';
+import { ProductMapper } from './mappers';
 
 const selectQuery = `
   id,
@@ -23,15 +23,14 @@ async function getAll(): Promise<IProduct[]> {
   const { data, error } = await supabase
     .from('products')
     .select(selectQuery)
+    .order('created_at', { ascending: false })
     .overrideTypes<Array<ProductDTO>, { merge: false }>();
 
   if (error) {
     throw new Error('Falha ao buscar produtos');
   }
 
-  const products = data.map(transformSupabaseDataToIProduct);
-
-  return products;
+  return data.map(ProductMapper.toDomain);
 }
 
 async function getOneById(id: string): Promise<IProduct> {
@@ -46,7 +45,7 @@ async function getOneById(id: string): Promise<IProduct> {
     throw new Error(`Erro ao buscar o produto: ${error.message}`);
   }
 
-  return transformSupabaseDataToIProduct(data);
+  return ProductMapper.toDomain(data);
 }
 
 async function add(params: IProduct): Promise<IProduct> {

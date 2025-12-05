@@ -2,10 +2,12 @@ import { Badge } from '@/app/components/ui/badge';
 import type { IProduct } from '../../types/models';
 import { Separator } from '@/app/components/ui/separator';
 
-type TProductBasicInfosCard = Pick<
-  IProduct,
-  'name' | 'category' | 'sku' | 'description'
->;
+type TProductBasicInfosCard = {
+  name?: IProduct['name'];
+  category?: IProduct['category'];
+  sku?: IProduct['sku'];
+  description: IProduct['description'];
+};
 export function ProductBasicInfosCard({
   name,
   category,
@@ -15,14 +17,14 @@ export function ProductBasicInfosCard({
   return (
     <div>
       <div>
-        <h2 className="text-2xl font-bold">{name}</h2>
+        <h2 className="text-2xl font-bold">{name || ' '}</h2>
         <div className="flex gap-2 mb-2">
           <Badge variant="outline">SKU: {sku || 'N/A'}</Badge>
-          <Badge variant="secondary">{category.name}</Badge>
+          <Badge variant="secondary">{category?.name || ''}</Badge>
         </div>
         <Separator />
       </div>
-      <p className="text-sm text-muted-foreground mb-2">{description}</p>
+      <p className="text-sm text-muted-foreground mb-2">{description || ''}</p>
     </div>
   );
 }
