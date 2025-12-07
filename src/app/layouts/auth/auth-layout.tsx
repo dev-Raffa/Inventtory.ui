@@ -9,10 +9,6 @@ export function AuthLayout() {
           <div className="absolute inset-0 bg-zinc-900" />
           <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop')] bg-cover bg-center grayscale opacity-40" />
 
-          <div className="relative z-20 flex items-center gap-2 font-medium">
-            {/* Logo repetido ou slogan aqui se quiser */}
-          </div>
-
           <div className="relative z-20 mt-auto">
             <blockquote className="space-y-2">
               <div className="mb-4 rounded-full bg-white/10 w-fit p-2">

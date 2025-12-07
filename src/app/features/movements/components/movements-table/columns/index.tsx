@@ -61,6 +61,7 @@ export const columnsMovementsListTable: ColumnDef<MovementResponse>[] = [
   },
   {
     accessorKey: 'description',
+    enableGlobalFilter: false,
     minSize: 150,
     header: 'Origem/Motivo',
     cell: ({ row }) => (
@@ -85,10 +86,11 @@ export const columnsMovementsListTable: ColumnDef<MovementResponse>[] = [
   },
   {
     accessorKey: 'totalQuantity',
+    enableGlobalFilter: false,
     minSize: 100,
     header: 'Itens',
     cell: ({ row }) => (
-      <span className="font-bold">{row.original.totalQuantity} Itens</span>
+      <span className="font-bold">{row.original.totalQuantity}</span>
     )
   },
   {

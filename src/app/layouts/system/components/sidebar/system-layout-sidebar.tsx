@@ -3,7 +3,7 @@ import { navLinks } from './navlinks-siderbar';
 
 export const SystemLayoutSidebar = () => {
   return (
-    <aside className="w-2xs h-full min-h-[calc(100vh-6.75rem)] p-6 px-2 rounded-2xl">
+    <aside className="w-3xs h-full min-h-[calc(100vh-6.75rem)] p-6 px-2 rounded-2xl">
       <nav>
         <ul>
           {navLinks.map(({ href, icon, label }) => {

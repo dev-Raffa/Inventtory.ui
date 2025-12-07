@@ -12,6 +12,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
     accessorKey: 'allImages',
     minSize: 80,
     header: 'Imagens',
+    enableGlobalFilter: false,
     enableResizing: false,
     cell: ({ row }) => (
       <ProductTableColumnImages
@@ -41,6 +42,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
   {
     accessorKey: 'category',
     header: 'Categoria',
+    enableGlobalFilter: false,
     size: 150,
     enableResizing: false,
     cell: ({ row }) => (
@@ -51,6 +53,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
   },
   {
     accessorKey: 'stock',
+    enableGlobalFilter: false,
     header: 'Estoque',
     minSize: 100,
     enableResizing: false,
@@ -65,6 +68,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
   },
   {
     accessorKey: 'hasVariants',
+    enableGlobalFilter: false,
     header: 'Variantes',
     enableResizing: false,
     enableHiding: false,
