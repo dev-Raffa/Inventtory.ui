@@ -22,6 +22,7 @@ export function WizardProvider({
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const currentStepId = searchParams.get(urlParamKey);
+  const stepsHash = steps.map((s) => s.id).join(',');
 
   const currentStepIndex = useMemo(() => {
     if (!currentStepId) return 0;
@@ -51,11 +52,11 @@ export function WizardProvider({
 
           return newParams;
         },
-
         { replace: true }
       );
     }
-  }, [currentStepId, steps, urlParamKey, setSearchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStepId, stepsHash, urlParamKey, setSearchParams]);
 
   const changeStep = useCallback(
     (newIndex: number) => {
@@ -71,20 +72,22 @@ export function WizardProvider({
         return newParams;
       });
     },
-
     [steps, urlParamKey, setSearchParams]
   );
 
-  const nextStep = async () => {
+  const nextStep = useCallback(async () => {
     if (isLoading) return;
 
     setIsLoading(true);
 
     if (onBeforeNextStep) {
       const canProceed = await onBeforeNextStep(currentStep);
-      setIsLoading(false);
 
-      if (!canProceed) return;
+      if (!canProceed) {
+        setIsLoading(false);
+
+        return;
+      }
     }
 
     if (!isLastStep) {
@@ -92,51 +95,74 @@ export function WizardProvider({
     }
 
     setIsLoading(false);
-  };
+  }, [
+    isLoading,
+    onBeforeNextStep,
+    currentStep,
+    isLastStep,
+    changeStep,
+    currentStepIndex
+  ]);
 
-  const prevStep = () => {
+  const prevStep = useCallback(() => {
     if (isFirstStep || isLoading) return;
 
     changeStep(currentStepIndex - 1);
-  };
+  }, [isFirstStep, isLoading, changeStep, currentStepIndex]);
 
-  const goToStep = (index: number) => {
+  const goToStep = useCallback(
+    (index: number) => {
+      if (isLoading) return;
+      changeStep(index);
+    },
+    [isLoading, changeStep]
+  );
+
+  const handleFinish = useCallback(async () => {
     if (isLoading) return;
-
-    changeStep(index);
-  };
-
-  const handleFinish = async () => {
-    if (isLoading) return;
-
     setIsLoading(true);
 
     await onFinish();
 
     setIsLoading(false);
-  };
+  }, [isLoading, onFinish]);
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     onCancel?.();
-  };
+  }, [onCancel]);
 
-  const value: WizardContextType = {
-    state: {
+  const value = useMemo<WizardContextType>(
+    () => ({
+      state: {
+        currentStep,
+        currentStepIndex,
+        totalSteps: steps.length,
+        isFirstStep,
+        isLastStep,
+        isLoading
+      },
+      actions: {
+        nextStep,
+        prevStep,
+        goToStep,
+        handleCancel,
+        handleFinish
+      }
+    }),
+    [
       currentStep,
       currentStepIndex,
-      totalSteps: steps.length,
+      steps.length,
       isFirstStep,
       isLastStep,
-      isLoading
-    },
-    actions: {
+      isLoading,
       nextStep,
       prevStep,
       goToStep,
       handleCancel,
       handleFinish
-    }
-  };
+    ]
+  );
 
   return (
     <WizardContext.Provider value={value}>{children}</WizardContext.Provider>
