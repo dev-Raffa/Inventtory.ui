@@ -9,8 +9,7 @@ export function DataTableBody() {
   return (
     <TableBody>
       {table.getRowModel().rows.map((row, index) => (
-        // @ts-expect-error id does'nt exists
-        <Fragment key={`table-row-product-${row?.original.id}-${index}`}>
+        <Fragment key={`table-row-${row?.id}-${index}`}>
           <TableRow>
             {row.getVisibleCells().map((cell) => (
               <TableCell key={cell.id}>

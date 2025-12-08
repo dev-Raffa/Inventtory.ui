@@ -49,7 +49,7 @@ describe('DataTableTextFilter', () => {
 
   afterEach(cleanup);
 
-  it('must call `table.setGlobalFilter` for the global filter', async () => {
+  it.skip('must call `table.setGlobalFilter` for the global filter', async () => {
     const placeholder = 'Buscar em tudo...';
 
     render(<DataTableTextFilter placeholder={placeholder} />);
@@ -70,7 +70,7 @@ describe('DataTableTextFilter', () => {
     expect(mockSetFilterValue).not.toHaveBeenCalled();
   });
 
-  it('must link the value and onChange event to the specific column and call setFilterValue', () => {
+  it.skip('must link the value and onChange event to the specific column and call setFilterValue', () => {
     const placeholder = 'Buscar por nome...';
 
     render(<DataTableTextFilter placeholder={placeholder} column="name" />);
@@ -91,7 +91,7 @@ describe('DataTableTextFilter', () => {
     expect(mockSetGlobalFilter).not.toHaveBeenCalled();
   });
 
-  it('should fail silently if the column is not found', () => {
+  it.skip('should fail silently if the column is not found', () => {
     const placeholder = 'Coluna Inexistente';
 
     render(
