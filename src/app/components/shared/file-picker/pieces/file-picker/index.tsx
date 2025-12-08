@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useFilePicker } from '../../hooks/use-file-picker';
 import { FilePickerContext } from '../../hooks';
 import type { FilePickerOptions, FileWithPreview } from '../../types';
@@ -32,7 +32,12 @@ export function FilePicker({
   const [state, actions] = useFilePicker(filePickerOptions);
 
   const contextValue: [typeof state & { files: typeof files }, typeof actions] =
-    [{ ...state, files }, actions];
+    useMemo(() => {
+      return [{ ...state, files }, actions] as [
+        typeof state & { files: typeof files },
+        typeof actions
+      ];
+    }, [state, files, actions]);
 
   return (
     <FilePickerContext.Provider value={contextValue}>
