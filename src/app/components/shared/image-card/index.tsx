@@ -1,52 +1,71 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ImageIcon } from 'lucide-react';
+import { ImageIcon, ImageOff } from 'lucide-react'; // Novo ícone para erro
 import { Skeleton } from '../../ui/skeleton';
 
 type TImageCard = {
   src: string;
   alt: string;
   showSkeleton?: boolean;
+  className?: string;
+  objectFit?: 'cover' | 'contain';
 };
 
-export function ImageCard({ src, alt, showSkeleton = true }: TImageCard) {
-  const [isLoaded, setIsLoaded] = useState(false);
+export function ImageCard({
+  src,
+  alt,
+  showSkeleton = true,
+  className,
+  objectFit = 'cover'
+}: TImageCard) {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>(
+    'loading'
+  );
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
-    setIsLoaded(false);
-
+    setStatus('loading');
     const img = imgRef.current;
 
     if (img && img.complete && img.naturalWidth > 0) {
-      setIsLoaded(true);
+      setStatus('loaded');
     }
   }, [src]);
 
-  const handleLoad = () => setIsLoaded(true);
-  const handleError = () => setIsLoaded(true);
-
   return (
-    <div className="relative overflow-hidden w-full h-full">
-      {!isLoaded && showSkeleton && (
-        <Skeleton className="h-full w-full flex items-center justify-center">
+    <div
+      className={cn(
+        'relative overflow-hidden w-full h-full bg-muted/20',
+        className
+      )}
+    >
+      {status === 'loading' && showSkeleton && (
+        <Skeleton className="absolute inset-0 z-10 flex items-center justify-center h-full w-full">
+          <ImageIcon className="size-6 text-muted-foreground/50" />
           <span className="sr-only">Carregando imagem...</span>
-          <ImageIcon className="size-6 text-gray-700" />
         </Skeleton>
+      )}
+
+      {status === 'error' && (
+        <div className="absolute inset-0 z-0 flex flex-col items-center justify-center bg-muted text-muted-foreground h-full w-full">
+          <ImageOff className="size-8 mb-2 opacity-50" />
+          <span className="text-xs">Não disponível</span>
+        </div>
       )}
 
       <figure className="relative w-full h-full">
         <img
           ref={imgRef}
           className={cn(
-            'transition-opacity duration-300 size-full rounded-t-[inherit] object-cover',
-            isLoaded ? 'opacity-100' : 'opacity-0'
+            'transition-opacity duration-300 size-full rounded-[inherit]',
+            status === 'loaded' ? 'opacity-100' : 'opacity-0',
+            objectFit === 'contain' ? 'object-contain' : 'object-cover'
           )}
           src={src}
           alt={alt}
           loading="lazy"
-          onLoad={handleLoad}
-          onError={handleError}
+          onLoad={() => setStatus('loaded')}
+          onError={() => setStatus('error')}
         />
       </figure>
     </div>
