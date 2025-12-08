@@ -17,13 +17,14 @@ import {
 
 interface TSimpleDataTable<TData> {
   data: TData[];
+  emptyMessage?: string;
   columns: ColumnDef<TData>[];
-
   meta?: TableMeta<any>;
 }
 
 export function SimpleDataTable<TData>({
   data,
+  emptyMessage,
   columns,
   meta
 }: TSimpleDataTable<TData>) {
@@ -52,15 +53,26 @@ export function SimpleDataTable<TData>({
         ))}
       </TableHeader>
       <TableBody>
-        {table.getRowModel().rows.map((row) => (
-          <TableRow key={row.id}>
-            {row.getVisibleCells().map((cell) => (
-              <TableCell key={cell.id}>
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </TableCell>
-            ))}
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))
+        ) : (
+          <TableRow>
+            <TableCell
+              colSpan={columns.length}
+              className="h-24 text-center text-muted-foreground"
+            >
+              {emptyMessage || 'Nenhum registro disponível.'}
+            </TableCell>
           </TableRow>
-        ))}
+        )}
       </TableBody>
     </Table>
   );

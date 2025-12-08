@@ -5,6 +5,7 @@ import { createContext, useContext, type ReactNode } from 'react';
 
 type DataTableContextType<TData> = {
   table: Table<TData>;
+  emptyMessage?: string;
   renderSubRow?: (row: Row<TData>, index: number) => ReactNode;
 };
 
