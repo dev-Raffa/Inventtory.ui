@@ -14,7 +14,7 @@ import type {
   FilePickerState
 } from '../types';
 
-import { processNewFiles } from '../utils/exports';
+import { processNewFiles } from '../utils';
 
 export const useFilePicker = (
   options: FilePickerOptions

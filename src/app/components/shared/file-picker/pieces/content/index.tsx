@@ -1,6 +1,6 @@
 import type { ComponentProps } from 'react';
 import { useFilePickerContext } from '../../hooks';
-import { getFilePreview } from '../../utils/exports';
+import { getFilePreview } from '../../utils';
 import { cn } from '@/lib/utils';
 import { FilePickerRemoveFileButton } from '../buttons/remove-file';
 import { createCloudinaryThumbnail } from '@/app/services/image-upload/utils';

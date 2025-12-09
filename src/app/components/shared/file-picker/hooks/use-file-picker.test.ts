@@ -37,12 +37,11 @@ const { mockProcessNewFiles } = vi.hoisted(() => {
   };
 });
 
-vi.mock('../utils/exports', () => ({
+vi.mock('../utils/', () => ({
   processNewFiles: mockProcessNewFiles
 }));
 
-//@ts-expect-error global is undefined
-global.URL.revokeObjectURL = vi.fn();
+globalThis.URL.revokeObjectURL = vi.fn();
 
 describe('useFilePicker', () => {
   const mockOnFilesChange = vi.fn();
