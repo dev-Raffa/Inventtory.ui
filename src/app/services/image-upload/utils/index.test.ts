@@ -1,80 +1,54 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createCloudinaryThumbnail } from './';
 
-const { mockCld, mockToURL, mockFormat, mockQuality, mockResize } = vi.hoisted(
-  () => {
-    const mockToURL = vi.fn(() => 'FINAL_CLOUDINARY_URL');
-    const mockQuality = vi.fn().mockReturnThis();
-    const mockFormat = vi.fn().mockReturnThis();
-    const mockResize = vi.fn().mockReturnThis();
+vi.mock('@/app/config/cloudinary', async () => {
+  const { Cloudinary } = await import('@cloudinary/url-gen');
+  return {
+    cld: new Cloudinary({
+      cloud: { cloudName: 'demo-env' },
+      url: { secure: true }
+    })
+  };
+});
 
-    const mockImageInstance = {
-      resize: mockResize,
-      format: mockFormat,
-      quality: mockQuality,
-      toURL: mockToURL
-    };
+describe('createCloudinaryThumbnail (Integration)', () => {
+  const TEST_PUBLIC_ID = 'products/shirt-blue';
 
-    const mockCld = {
-      image: vi.fn(() => mockImageInstance)
-    };
-
-    return {
-      mockCld,
-      mockToURL,
-      mockQuality,
-      mockFormat,
-      mockResize
-    };
-  }
-);
-
-vi.mock('@/app/config/cloudinary', () => ({
-  cld: mockCld
-}));
-
-vi.mock('@cloudinary/url-gen/actions/resize', () => ({
-  thumbnail: vi.fn(() => ({
-    width: vi.fn().mockReturnThis(),
-    height: vi.fn().mockReturnThis(),
-    gravity: vi.fn().mockReturnThis()
-  }))
-}));
-
-vi.mock('@cloudinary/url-gen/qualifiers/textAlignment', () => ({
-  center: vi.fn(() => 'center-gravity')
-}));
-
-describe('createCloudinaryThumbnail', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  const TEST_PUBLIC_ID = 'products/sku-12345';
-  const TEST_OPTIONS = { width: 300, height: 200, quality: 95 };
+  it('should generate a valid Cloudinary URL with correct transformations', () => {
+    const options = { width: 300, height: 400, quality: 90 };
 
-  it('must call the SDK with the correct resizing and quality parameters', () => {
-    const url = createCloudinaryThumbnail(TEST_PUBLIC_ID, TEST_OPTIONS);
+    const url = createCloudinaryThumbnail(TEST_PUBLIC_ID, options);
 
-    expect(url).toBe('FINAL_CLOUDINARY_URL');
-    expect(mockToURL).toHaveBeenCalledTimes(1);
-    expect(mockCld.image).toHaveBeenCalledWith(TEST_PUBLIC_ID);
-    expect(mockResize).toHaveBeenCalledTimes(1);
-    expect(mockFormat).toHaveBeenCalledWith('auto');
-    expect(mockQuality).toHaveBeenCalledWith(95);
+    expect(url).toContain('https://res.cloudinary.com/demo-env/image/upload/');
+    expect(url).toContain('c_thumb');
+    expect(url).toContain('g_center');
+    expect(url).toContain('h_400');
+    expect(url).toContain('w_300');
+    expect(url).toContain('f_auto');
+    expect(url).toContain('q_90');
+    expect(url).toContain(TEST_PUBLIC_ID);
   });
 
-  it('should use quality 80 if it is not provided', () => {
-    const optionsWithoutQuality = { width: 100, height: 100 };
+  it('should use default quality (80) when not provided', () => {
+    const url = createCloudinaryThumbnail(TEST_PUBLIC_ID, {
+      width: 100,
+      height: 100
+    });
 
-    createCloudinaryThumbnail(TEST_PUBLIC_ID, optionsWithoutQuality);
-
-    expect(mockQuality).toHaveBeenCalledWith(80);
+    expect(url).toContain('q_80');
   });
 
-  it('should return an empty string if the publicId is null or starts with "mock"', () => {
-    expect(createCloudinaryThumbnail('', TEST_OPTIONS)).toBe('');
-    expect(createCloudinaryThumbnail('mock-temp-id', TEST_OPTIONS)).toBe('');
-    expect(mockCld.image).not.toHaveBeenCalled();
+  it('should return empty string for invalid inputs', () => {
+    expect(createCloudinaryThumbnail('', { width: 100, height: 100 })).toBe('');
+    expect(createCloudinaryThumbnail(null, { width: 100, height: 100 })).toBe(
+      ''
+    );
+    expect(
+      createCloudinaryThumbnail(undefined, { width: 100, height: 100 })
+    ).toBe('');
   });
 });

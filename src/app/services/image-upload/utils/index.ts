@@ -1,6 +1,7 @@
 import { cld } from '@/app/config/cloudinary';
 import { thumbnail } from '@cloudinary/url-gen/actions/resize';
 import { center } from '@cloudinary/url-gen/qualifiers/textAlignment';
+
 interface ThumbnailOptions {
   width: number;
   height: number;
@@ -8,14 +9,15 @@ interface ThumbnailOptions {
 }
 
 export function createCloudinaryThumbnail(
-  publicId: string,
+  publicId: string | null | undefined,
   options: ThumbnailOptions
 ): string {
-  if (!publicId || publicId.startsWith('mock')) {
+  if (!publicId) {
     return '';
   }
 
   const { width, height, quality = 80 } = options;
+
   const myImage = cld.image(publicId);
 
   myImage

@@ -1,4 +1,5 @@
-import axios from 'axios';
+import { CloudinaryMapper } from './mapper';
+import type { CloudinaryUploadDTO, UploadedImage } from './types';
 
 const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_NAME;
 const UPLOAD_PRESET = import.meta.env.VITE_CLOUDINARY_PRESET_NAME;
@@ -6,29 +7,32 @@ const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`;
 
 export async function uploadImageToCloudinary(
   file: File
-): Promise<{ publicId: string; url: string }> {
+): Promise<UploadedImage> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', UPLOAD_PRESET);
 
   try {
-    const response = await axios.post(UPLOAD_URL, formData);
+    const response = await fetch(UPLOAD_URL, {
+      method: 'POST',
+      body: formData
+    });
 
-    return {
-      publicId: response.data.public_id,
-      url: response.data.secure_url
-    };
-  } catch (error) {
-    if (axios.isAxiosError(error) && error.response) {
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       throw new Error(
-        `Falha no upload: ${error.response.data?.error?.message || error.message}`
+        errorData.error?.message || `Erro HTTP: ${response.status}`
       );
     }
 
+    const data = (await response.json()) as CloudinaryUploadDTO;
+
+    return CloudinaryMapper.toDomain(data);
+  } catch (error) {
     if (error instanceof Error) {
-      throw new Error(`Erro de rede ou upload: ${error.message}`);
+      throw new Error(`Falha no upload: ${error.message}`);
     }
 
-    throw new Error('Erro de rede ou upload desconhecido');
+    throw new Error('Erro desconhecido no upload de imagem');
   }
 }

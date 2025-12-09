@@ -1,126 +1,90 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { uploadImageToCloudinary } from './';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type MockInstance
+} from 'vitest';
+import { uploadImageToCloudinary } from './index';
 
-const {
-  mockAxiosPost,
-  mockFormDataAppend,
-  MockFormDataClass,
-  mockFormDataConstructor
-} = vi.hoisted(() => {
-  const mockAxiosPost = vi.fn();
-  const mockFormDataAppend = vi.fn();
-  const mockFormDataConstructor = vi.fn();
+function createFile(name: string, type: string, size: number): File {
+  const file = new File([''], name, { type });
 
-  const MockFormDataClass = class {
-    constructor() {
-      mockFormDataConstructor();
-    }
+  Object.defineProperty(file, 'size', { value: size });
 
-    append = mockFormDataAppend;
-  };
+  return file;
+}
 
-  return {
-    mockAxiosPost,
-    mockFormDataAppend,
-    MockFormDataClass,
-    mockFormDataConstructor
-  };
-});
-
-vi.mock('axios', () => ({
-  default: {
-    post: mockAxiosPost,
-    isAxiosError: vi.fn((error) => !!error.isAxiosError)
-  },
-  isAxiosError: vi.fn((error) => !!error.isAxiosError)
-}));
-
-vi.stubGlobal('FormData', MockFormDataClass);
-
-const MOCK_CLOUD_NAME = 'test-cloud';
-const MOCK_UPLOAD_PRESET = 'test-preset';
-
-describe('uploadImageToCloudinary', () => {
-  const mockFile = new File(['test'], 'image.jpg', { type: 'image/jpeg' });
+describe('Image Upload Service', () => {
+  let fetchSpy: MockInstance;
 
   beforeEach(() => {
     vi.clearAllMocks();
 
-    vi.stubGlobal('import.meta.env', {
-      VITE_CLOUDINARY_NAME: MOCK_CLOUD_NAME,
-      VITE_CLOUDINARY_PRESET_NAME: MOCK_UPLOAD_PRESET
-    });
+    fetchSpy = vi.spyOn(globalThis, 'fetch');
   });
 
-  it('must format the FormData and return the publicId and URL on successful entry', async () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should upload an image successfully and return mapped data', async () => {
     const mockResponse = {
-      data: {
-        public_id: 'test_public_id_123',
-        secure_url: 'https://cdn.example.com/image.jpg'
-      }
+      public_id: 'sample_id',
+      secure_url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg',
+      width: 100,
+      height: 100
     };
-    mockAxiosPost.mockResolvedValueOnce(mockResponse);
 
-    const result = await uploadImageToCloudinary(mockFile);
+    fetchSpy.mockResolvedValueOnce({
+      ok: true,
+      json: async () => mockResponse
+    } as Response);
 
-    expect(mockFormDataConstructor).toHaveBeenCalledTimes(1);
-    expect(mockFormDataAppend).toHaveBeenCalledWith('file', mockFile);
-    expect(mockFormDataAppend).toHaveBeenCalledWith(
-      'upload_preset',
-      'invento.ui_unsigned'
-    );
+    const file = createFile('test.png', 'image/png', 1024);
+    const result = await uploadImageToCloudinary(file);
 
-    expect(mockAxiosPost).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.any(MockFormDataClass)
-    );
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    const [url, options] = fetchSpy.mock.calls[0];
+
+    expect(url).toContain('api.cloudinary.com');
+    expect(options?.method).toBe('POST');
+    expect(options?.body).toBeInstanceOf(FormData);
 
     expect(result).toEqual({
-      publicId: 'test_public_id_123',
-      url: 'https://cdn.example.com/image.jpg'
+      publicId: 'sample_id',
+      url: 'https://res.cloudinary.com/demo/image/upload/sample.jpg'
     });
   });
 
-  it('should throw a detailed error if the Cloudinary API returns an upload failure', async () => {
-    const serverErrorMessage = 'File size is too large.';
-    const mockError = {
-      isAxiosError: true,
-      response: {
-        data: {
-          error: { message: serverErrorMessage }
-        }
-      },
-      message: 'Request failed with status code 400'
+  it('should throw an error when Cloudinary returns an API error', async () => {
+    const errorResponse = {
+      error: { message: 'Invalid file type' }
     };
 
-    mockAxiosPost.mockRejectedValueOnce(mockError);
+    fetchSpy.mockResolvedValueOnce({
+      ok: false,
+      status: 400,
+      json: async () => errorResponse
+    } as Response);
 
-    await expect(uploadImageToCloudinary(mockFile)).rejects.toThrow(
-      `Falha no upload: ${serverErrorMessage}`
+    const file = createFile('bad.exe', 'application/x-msdownload', 1024);
+
+    await expect(uploadImageToCloudinary(file)).rejects.toThrow(
+      'Falha no upload: Invalid file type'
     );
   });
 
-  it('should throw a generic error if the failure is network-related (no response from the server)', async () => {
-    const genericAxiosMessage = 'Network Error';
-    const mockNetworkError = new Error(genericAxiosMessage);
+  it('should throw a generic error when fetch fails (network error)', async () => {
+    fetchSpy.mockRejectedValueOnce(new Error('Network Error'));
 
-    (mockNetworkError as any).isAxiosError = true;
-    (mockNetworkError as any).response = undefined;
+    const file = createFile('test.png', 'image/png', 1024);
 
-    mockAxiosPost.mockRejectedValueOnce(mockNetworkError);
-
-    await expect(uploadImageToCloudinary(mockFile)).rejects.toThrow(
-      `Erro de rede ou upload: ${genericAxiosMessage}`
-    );
-  });
-
-  it('should throw an unknown error if the error is not an instance of AxiosError or Error', async () => {
-    const unknownError = { name: 'CustomError', stack: '...' };
-
-    mockAxiosPost.mockRejectedValueOnce(unknownError);
-
-    await expect(uploadImageToCloudinary(mockFile)).rejects.toThrow(
-      'Erro de rede ou upload desconhecido'
+    await expect(uploadImageToCloudinary(file)).rejects.toThrow(
+      'Falha no upload: Network Error'
     );
   });
 });

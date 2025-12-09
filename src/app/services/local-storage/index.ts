@@ -1,4 +1,4 @@
-function setLocalStorage(key: string, value: any): void {
+function setLocalStorage<T>(key: string, value: T): void {
   if (!isLocalStorageAvailable()) throw new Error('storage is not available');
 
   try {
@@ -15,9 +15,11 @@ function getLocalStorage<T>(key: string): T | undefined {
   try {
     const item = localStorage.getItem(key);
 
-    return item ? JSON.parse(item) : undefined;
+    return item ? (JSON.parse(item) as T) : undefined;
   } catch (error) {
     console.error(`Error getting localStorage key "${key}":`, error);
+
+    return undefined;
   }
 }
 
