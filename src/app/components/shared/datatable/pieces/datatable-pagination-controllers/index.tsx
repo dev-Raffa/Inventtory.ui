@@ -21,18 +21,20 @@ export function PaginationControllers() {
   return (
     <section className="w-full justify-end items-center flex gap-6">
       <section className="flex items-center gap-2">
-        Resultados por página:
+        <span className="text-sm font-medium">Resultados por página:</span>
         <Select
-          defaultValue="10"
+          value={`${table.getState().pagination.pageSize}`}
           onValueChange={(value) => table.setPageSize(Number(value))}
         >
-          <SelectTrigger size="sm">
-            <SelectValue />
+          <SelectTrigger className="h-8 w-[70px]">
+            <SelectValue placeholder={table.getState().pagination.pageSize} />
           </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="20">20</SelectItem>
-            <SelectItem value="50">50</SelectItem>
+          <SelectContent side="top">
+            {[10, 20, 30, 40, 50].map((pageSize) => (
+              <SelectItem key={pageSize} value={`${pageSize}`} role="option">
+                {pageSize}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </section>
@@ -46,34 +48,42 @@ export function PaginationControllers() {
         <Button
           variant="outline"
           size="sm"
-          onClick={table.firstPage}
+          className="h-8 w-8 p-0"
+          onClick={() => table.firstPage()}
           disabled={!table.getCanPreviousPage()}
+          aria-label="Primeira página"
         >
-          <ChevronsLeft />
+          <ChevronsLeft className="h-4 w-4" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={table.previousPage}
+          className="h-8 w-8 p-0"
+          onClick={() => table.previousPage()}
           disabled={!table.getCanPreviousPage()}
+          aria-label="Página anterior"
         >
-          <ChevronLeft />
+          <ChevronLeft className="h-4 w-4" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={table.nextPage}
+          className="h-8 w-8 p-0"
+          onClick={() => table.nextPage()}
           disabled={!table.getCanNextPage()}
+          aria-label="Próxima página"
         >
-          <ChevronRight />
+          <ChevronRight className="h-4 w-4" />
         </Button>
         <Button
           variant="outline"
           size="sm"
-          onClick={table.lastPage}
+          className="h-8 w-8 p-0"
+          onClick={() => table.lastPage()}
           disabled={!table.getCanNextPage()}
+          aria-label="Última página"
         >
-          <ChevronsRight />
+          <ChevronsRight className="h-4 w-4" />
         </Button>
       </ButtonGroup>
     </section>

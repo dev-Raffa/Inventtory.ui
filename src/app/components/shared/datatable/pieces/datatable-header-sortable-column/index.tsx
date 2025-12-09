@@ -14,7 +14,7 @@ type THeaderSortableColumn<TData> = {
   title: ReactNode | string;
 };
 
-export function HeaderSortableColumn<TData>({
+export function DataTableHeaderSortableColumn<TData>({
   column,
   title
 }: THeaderSortableColumn<TData>) {
