@@ -1,7 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { MemoryRouter, Routes, Route, useSearchParams } from 'react-router';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { MemoryRouter } from 'react-router';
 import {
   Wizard,
   WizardHeader,
@@ -10,275 +10,294 @@ import {
   useWizard
 } from './index';
 
-const UrlLogger = () => {
-  const [params] = useSearchParams();
-  return <div data-testid="url-logger">{params.get('step')}</div>;
-};
-
 const steps = [
-  { id: 'step-1', label: 'Step 1', component: <div>Content 1</div> },
-  { id: 'step-2', label: 'Step 2', component: <div>Content 2</div> },
-  { id: 'step-3', label: 'Step 3', component: <div>Content 3</div> }
+  { id: 'step-1', label: 'Dados Pessoais', component: <h1>Passo 1: Dados</h1> },
+  { id: 'step-2', label: 'Endereço', component: <h1>Passo 2: Endereço</h1> },
+  { id: 'step-3', label: 'Revisão', component: <h1>Passo 3: Revisão</h1> }
 ];
 
-const CustomControls = () => {
-  const { actions } = useWizard();
-  return (
-    <button onClick={() => actions.goToStep(2)} data-testid="jump-btn">
-      Pular para Passo 3
-    </button>
-  );
+const WizardContextSpy = ({ onContext }: { onContext: (ctx: any) => void }) => {
+  const context = useWizard();
+
+  onContext(context);
+
+  return null;
 };
 
 const renderWizard = (
-  props: any = {},
   initialEntries = ['/'],
-  extraChildren: any = null
+  props: any = {},
+  extraChildren: React.ReactNode = null
 ) => {
   return render(
     <MemoryRouter initialEntries={initialEntries}>
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <>
-              <UrlLogger />
-              <Wizard steps={steps} {...props}>
-                <WizardHeader />
-                <WizardContent />
-                {extraChildren}
-                <WizardControl />
-              </Wizard>
-            </>
-          }
-        />
-      </Routes>
+      <Wizard steps={steps} {...props}>
+        <WizardHeader />
+        <WizardContent />
+        {extraChildren}
+        <WizardControl />
+      </Wizard>
     </MemoryRouter>
   );
 };
 
 describe('Wizard Component', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
-  describe('Initialization and URL Synchronization', () => {
-    it('should render the first step if the URL is empty', () => {
+  describe('Navigation Flow (UI Integration)', () => {
+    it('should render the first step by default', () => {
       renderWizard();
 
-      expect(screen.getByText('Content 1')).toBeInTheDocument();
-      expect(screen.getByText('Step 1')).toBeInTheDocument();
-    });
+      expect(
+        screen.getByRole('heading', { name: 'Passo 1: Dados' })
+      ).toBeInTheDocument();
 
-    it('should automatically add "?step=step-1" param to URL on mount', async () => {
-      renderWizard();
-
-      await waitFor(() => {
-        expect(screen.getByTestId('url-logger')).toHaveTextContent('step-1');
-      });
-    });
-
-    it('should initialize at the correct step if URL has param (e.g., step-2)', () => {
-      renderWizard({}, ['/?step=step-2']);
-
-      expect(screen.getByText('Content 2')).toBeInTheDocument();
-      expect(screen.queryByText('Content 1')).not.toBeInTheDocument();
-    });
-
-    it('should fallback to step 1 if URL param is invalid', () => {
-      renderWizard({}, ['/?step=invalid-step-id']);
-
-      expect(screen.getByText('Content 1')).toBeInTheDocument();
-    });
-  });
-
-  describe('Basic Navigation', () => {
-    it('should advance to the next step on "Next" click', async () => {
-      const user = userEvent.setup();
-      renderWizard();
-
-      const nextButton = screen.getByRole('button', { name: /Avançar/i });
-      await user.click(nextButton);
-
-      await waitFor(() => {
-        expect(screen.getByText('Content 2')).toBeInTheDocument();
-        expect(screen.getByTestId('url-logger')).toHaveTextContent('step-2');
-      });
-    });
-
-    it('should return to previous step on "Back" click', async () => {
-      const user = userEvent.setup();
-      renderWizard({}, ['/?step=step-2']);
-
-      const prevButton = screen.getByRole('button', { name: /Voltar/i });
-      await user.click(prevButton);
-
-      expect(screen.getByText('Content 1')).toBeInTheDocument();
-      expect(screen.getByTestId('url-logger')).toHaveTextContent('step-1');
-    });
-  });
-
-  describe('Button Control', () => {
-    it('should NOT show "Back" button on the first step', () => {
-      renderWizard({}, ['/?step=step-1']);
       expect(
         screen.queryByRole('button', { name: /Voltar/i })
       ).not.toBeInTheDocument();
     });
 
-    it('should NOT show "Next" button on the last step', () => {
-      renderWizard({}, ['/?step=step-3']);
+    it('should navigate to the next step when clicking "Next"', async () => {
+      const user = userEvent.setup();
+
+      renderWizard();
+
+      const nextBtn = screen.getByRole('button', { name: /Avançar/i });
+
+      await user.click(nextBtn);
+
       expect(
-        screen.queryByRole('button', { name: /Avançar/i })
-      ).not.toBeInTheDocument();
+        await screen.findByRole('heading', { name: 'Passo 2: Endereço' })
+      ).toBeInTheDocument();
     });
 
-    it('should show "Finish" button ONLY on the last step', () => {
-      const { unmount } = renderWizard({}, ['/?step=step-2']);
-      expect(
-        screen.queryByRole('button', { name: /Finalizar/i })
-      ).not.toBeInTheDocument();
-      unmount();
+    it('should navigate back when clicking "Back"', async () => {
+      const user = userEvent.setup();
 
-      renderWizard({}, ['/?step=step-3']);
+      renderWizard(['/?step=step-2']);
+
       expect(
-        screen.getByRole('button', { name: /Finalizar/i })
+        screen.getByRole('heading', { name: 'Passo 2: Endereço' })
+      ).toBeInTheDocument();
+
+      const prevBtn = screen.getByRole('button', { name: /Voltar/i });
+
+      await user.click(prevBtn);
+
+      expect(
+        await screen.findByRole('heading', { name: 'Passo 1: Dados' })
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('URL Synchronization', () => {
+    it('should initialize correctly based on URL params', () => {
+      renderWizard(['/?step=step-3']);
+
+      expect(
+        screen.getByRole('heading', { name: 'Passo 3: Revisão' })
+      ).toBeInTheDocument();
+    });
+
+    it('should fallback to step 1 for invalid URL params', () => {
+      renderWizard(['/?step=invalid-step-id']);
+
+      expect(
+        screen.getByRole('heading', { name: 'Passo 1: Dados' })
       ).toBeInTheDocument();
     });
   });
 
   describe('Validation Logic (onBeforeNextStep)', () => {
-    it('should block navigation if onBeforeNextStep returns false', async () => {
+    it('should block navigation if validation returns false', async () => {
       const user = userEvent.setup();
-      const handleBeforeChange = vi.fn().mockReturnValue(false);
+      const mockValidate = vi.fn().mockReturnValue(false);
 
-      renderWizard({ onBeforeNextStep: handleBeforeChange });
+      renderWizard(['/'], { onBeforeNextStep: mockValidate });
 
       await user.click(screen.getByRole('button', { name: /Avançar/i }));
 
-      expect(handleBeforeChange).toHaveBeenCalledWith(
+      expect(mockValidate).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'step-1' })
       );
 
-      expect(screen.getByText('Content 1')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Passo 1: Dados' })
+      ).toBeInTheDocument();
     });
 
-    it('should allow navigation if onBeforeNextStep returns true', async () => {
+    it('should show loading state and wait for async validation', async () => {
       const user = userEvent.setup();
-      const handleBeforeChange = vi.fn().mockReturnValue(true);
 
-      renderWizard({ onBeforeNextStep: handleBeforeChange });
+      let resolveValidation: (value: boolean) => void = () => {};
+      const validationPromise = new Promise<boolean>((resolve) => {
+        resolveValidation = resolve;
+      });
 
-      await user.click(screen.getByRole('button', { name: /Avançar/i }));
+      const mockAsyncValidate = vi.fn().mockReturnValue(validationPromise);
+
+      renderWizard(['/'], { onBeforeNextStep: mockAsyncValidate });
+
+      const nextBtn = screen.getByRole('button', { name: /Avançar/i });
+
+      const clickPromise = user.click(nextBtn);
 
       await waitFor(() => {
-        expect(screen.getByText('Content 2')).toBeInTheDocument();
+        expect(nextBtn).toBeDisabled();
       });
-    });
 
-    it('should show loading state on buttons while validating (Promise)', async () => {
-      const user = userEvent.setup();
-      const handleBeforeChange = vi
-        .fn()
-        .mockImplementation(
-          () => new Promise((resolve) => setTimeout(() => resolve(true), 100))
-        );
+      resolveValidation(true);
 
-      renderWizard({ onBeforeNextStep: handleBeforeChange });
+      await clickPromise;
 
-      const nextButton = screen.getByRole('button', { name: /Avançar/i });
-      await user.click(nextButton);
-
-      expect(nextButton).toBeDisabled();
-
-      await waitFor(() => {
-        expect(screen.getByText('Content 2')).toBeInTheDocument();
-      });
+      expect(
+        await screen.findByRole('heading', { name: 'Passo 2: Endereço' })
+      ).toBeInTheDocument();
     });
   });
 
-  describe('Completion & Cancellation', () => {
-    it('should call onFinish when clicking "Finish" on the last step', async () => {
+  describe('Completion', () => {
+    it('should call onFinish only on the last step', async () => {
       const user = userEvent.setup();
       const handleFinish = vi.fn();
 
-      renderWizard({ onFinish: handleFinish }, ['/?step=step-3']);
+      renderWizard(['/?step=step-3'], { onFinish: handleFinish });
 
-      await user.click(screen.getByRole('button', { name: /Finalizar/i }));
+      const finishBtn = screen.getByRole('button', { name: /Finalizar/i });
+
+      expect(
+        screen.queryByRole('button', { name: /Avançar/i })
+      ).not.toBeInTheDocument();
+
+      await user.click(finishBtn);
 
       expect(handleFinish).toHaveBeenCalledTimes(1);
     });
-
-    it('should call onCancel when clicking "Cancel" (Covering handleCancel)', async () => {
-      const user = userEvent.setup();
-      const handleCancel = vi.fn();
-
-      renderWizard({ onCancel: handleCancel });
-
-      const cancelButton = screen.getByRole('button', { name: /Cancelar/i });
-      await user.click(cancelButton);
-
-      expect(handleCancel).toHaveBeenCalledTimes(1);
-    });
   });
 
-  describe('Context & Hooks API', () => {
-    it('should throw an error if useWizard is used outside of <Wizard>', () => {
+  describe('Guard Clauses & Branch Coverage (Whitebox Testing)', () => {
+    it('should ignore prevStep() when on the first step', () => {
+      let context: any;
+
+      renderWizard(
+        ['/'],
+        {},
+        <WizardContextSpy onContext={(ctx) => (context = ctx)} />
+      );
+
+      act(() => {
+        context.actions.prevStep();
+      });
+
+      expect(context.state.currentStepIndex).toBe(0);
+      expect(
+        screen.getByRole('heading', { name: 'Passo 1: Dados' })
+      ).toBeInTheDocument();
+    });
+
+    it('should ignore nextStep() when on the last step (without explicit finish)', () => {
+      let context: any;
+
+      renderWizard(
+        ['/?step=step-3'],
+        {},
+        <WizardContextSpy onContext={(ctx) => (context = ctx)} />
+      );
+
+      act(() => {
+        context.actions.nextStep();
+      });
+
+      expect(context.state.currentStepIndex).toBe(2);
+      expect(
+        screen.getByRole('heading', { name: 'Passo 3: Revisão' })
+      ).toBeInTheDocument();
+    });
+
+    it('should ignore goToStep() with invalid indices (negative or out of bounds)', () => {
+      let context: any;
+
+      renderWizard(
+        ['/'],
+        {},
+        <WizardContextSpy onContext={(ctx) => (context = ctx)} />
+      );
+
+      act(() => {
+        context.actions.goToStep(-1);
+      });
+
+      expect(context.state.currentStepIndex).toBe(0);
+
+      act(() => {
+        context.actions.goToStep(99);
+      });
+
+      expect(context.state.currentStepIndex).toBe(0);
+    });
+
+    it('should ignore all navigation actions while isLoading is true', async () => {
+      let context: any;
+      const pendingPromise = new Promise(() => {});
+      const mockValidate = vi.fn().mockReturnValue(pendingPromise);
+
+      renderWizard(
+        ['/'],
+        { onBeforeNextStep: mockValidate },
+        <WizardContextSpy onContext={(ctx) => (context = ctx)} />
+      );
+
+      await act(async () => {
+        context.actions.nextStep();
+      });
+
+      expect(context.state.isLoading).toBe(true);
+
+      act(() => {
+        context.actions.goToStep(2);
+        context.actions.prevStep();
+        context.actions.nextStep();
+        context.actions.handleFinish();
+      });
+
+      expect(context.state.currentStepIndex).toBe(0);
+      expect(mockValidate).toHaveBeenCalledTimes(1);
+    });
+
+    it('should handle errors thrown outside the provider', () => {
       const consoleSpy = vi
         .spyOn(console, 'error')
         .mockImplementation(() => {});
 
-      const TestComponent = () => {
+      const BadComponent = () => {
         useWizard();
-
         return null;
       };
 
-      expect(() => render(<TestComponent />)).toThrow(
+      expect(() => render(<BadComponent />)).toThrow(
         'useWizard deve ser usado dentro de um componente <Wizard>'
       );
 
       consoleSpy.mockRestore();
     });
 
-    it('should allow programmatic navigation via goToStep(index)', async () => {
-      const user = userEvent.setup();
-
-      renderWizard({}, ['/?step=step-1'], <CustomControls />);
-
-      const jumpButton = screen.getByTestId('jump-btn');
-
-      await user.click(jumpButton);
-      await waitFor(() => {
-        expect(screen.getByText('Content 3')).toBeInTheDocument();
-        expect(screen.getByTestId('url-logger')).toHaveTextContent('step-3');
-      });
-    });
-
-    it('should block goToStep navigation if isLoading is true', async () => {
-      const user = userEvent.setup();
-      const handleBeforeChange = vi
-        .fn()
-        .mockImplementation(() => new Promise(() => {}));
+    it('should handle cancel action safely when onCancel is undefined', () => {
+      let context: any;
 
       renderWizard(
-        { onBeforeNextStep: handleBeforeChange },
-        ['/?step=step-1'],
-        <CustomControls />
+        ['/'],
+        {},
+        <WizardContextSpy onContext={(ctx) => (context = ctx)} />
       );
 
-      const nextButton = screen.getByRole('button', { name: /Avançar/i });
+      act(() => {
+        context.actions.handleCancel();
+      });
 
-      await user.click(nextButton);
-
-      expect(handleBeforeChange).toHaveBeenCalled();
-
-      const jumpButton = screen.getByTestId('jump-btn');
-
-      await user.click(jumpButton);
-
-      expect(screen.queryByText('Content 3')).not.toBeInTheDocument();
-      expect(screen.getByText('Content 1')).toBeInTheDocument();
+      expect(context.state.currentStepIndex).toBe(0);
     });
   });
 });

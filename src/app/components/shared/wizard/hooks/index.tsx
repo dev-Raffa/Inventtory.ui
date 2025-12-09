@@ -113,6 +113,7 @@ export function WizardProvider({
   const goToStep = useCallback(
     (index: number) => {
       if (isLoading) return;
+
       changeStep(index);
     },
     [isLoading, changeStep]
