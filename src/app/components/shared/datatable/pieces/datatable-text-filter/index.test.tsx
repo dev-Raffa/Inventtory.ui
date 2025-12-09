@@ -1,57 +1,66 @@
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { DataTableTextFilter } from '.';
+import {
+  render,
+  screen,
+  fireEvent,
+  cleanup,
+  act
+} from '@testing-library/react';
+import { DataTableTextFilter } from './';
 
-const {
-  mockUseDataTable,
-  MockInput,
-  mockSetGlobalFilter,
-  mockSetFilterValue,
-  mockGetFilterValue
-} = vi.hoisted(() => {
-  const mockSetGlobalFilter = vi.fn();
-  const mockSetFilterValue = vi.fn();
-  const mockGetFilterValue = vi.fn(() => 'valor inicial');
+const { mockUseDataTable, MockInput, mockSetGlobalFilter, mockSetFilterValue } =
+  vi.hoisted(() => {
+    const mockSetGlobalFilter = vi.fn();
+    const mockSetFilterValue = vi.fn();
+    const mockGetFilterValue = vi.fn(() => 'valor inicial');
 
-  const mockColumn = {
-    getFilterValue: mockGetFilterValue,
-    setFilterValue: mockSetFilterValue
-  };
+    const mockColumn = {
+      getFilterValue: mockGetFilterValue,
+      setFilterValue: mockSetFilterValue
+    };
 
-  const mockTable = {
-    setGlobalFilter: mockSetGlobalFilter,
-    getColumn: vi.fn((id) => (id === 'name' ? mockColumn : undefined))
-  };
+    const mockTable = {
+      getState: vi.fn(() => ({ globalFilter: '' })),
+      setGlobalFilter: mockSetGlobalFilter,
+      getColumn: vi.fn((id) => (id === 'name' ? mockColumn : undefined))
+    };
 
-  const mockUseDataTable = vi.fn(() => ({ table: mockTable }));
+    const mockUseDataTable = vi.fn(() => ({ table: mockTable }));
 
-  const MockInput = vi.fn((props) => (
-    <input data-testid="text-filter-input" {...props} />
-  ));
+    const MockInput = vi.fn((props) => (
+      <input
+        data-testid="text-filter-input"
+        {...props}
+        onChange={(e) => props.onChange && props.onChange(e)}
+        value={props.value ?? ''}
+      />
+    ));
 
-  return {
-    mockUseDataTable,
-    MockInput,
-    mockSetGlobalFilter,
-    mockSetFilterValue,
-    mockGetFilterValue
-  };
-});
+    return {
+      mockUseDataTable,
+      MockInput,
+      mockSetGlobalFilter,
+      mockSetFilterValue,
+      mockGetFilterValue
+    };
+  });
 
 vi.mock('../../hook/usetable', () => ({ useDataTable: mockUseDataTable }));
-
 vi.mock('@/app/components/ui/input', () => ({ Input: MockInput }));
 
 describe('DataTableTextFilter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useFakeTimers();
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.useRealTimers();
+  });
 
-  it.skip('must call `table.setGlobalFilter` for the global filter', async () => {
+  it('must call `table.setGlobalFilter` after debounce delay', async () => {
     const placeholder = 'Buscar em tudo...';
-
     render(<DataTableTextFilter placeholder={placeholder} />);
 
     expect(MockInput).toHaveBeenCalledWith(
@@ -65,14 +74,18 @@ describe('DataTableTextFilter', () => {
       target: { value: typedValue }
     });
 
+    expect(mockSetGlobalFilter).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(mockSetGlobalFilter).toHaveBeenCalledWith(typedValue);
     expect(mockSetGlobalFilter).toHaveBeenCalledTimes(1);
-    expect(mockSetFilterValue).not.toHaveBeenCalled();
   });
 
-  it.skip('must link the value and onChange event to the specific column and call setFilterValue', () => {
+  it('must call setFilterValue for specific column after debounce delay', () => {
     const placeholder = 'Buscar por nome...';
-
     render(<DataTableTextFilter placeholder={placeholder} column="name" />);
 
     expect(MockInput).toHaveBeenCalledWith(
@@ -80,18 +93,23 @@ describe('DataTableTextFilter', () => {
       undefined
     );
 
-    expect(mockGetFilterValue).toHaveBeenCalledTimes(1);
-
     const newValue = 'novo filtro';
+
     fireEvent.change(screen.getByTestId('text-filter-input'), {
       target: { value: newValue }
+    });
+
+    expect(mockSetFilterValue).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(500);
     });
 
     expect(mockSetFilterValue).toHaveBeenCalledWith(newValue);
     expect(mockSetGlobalFilter).not.toHaveBeenCalled();
   });
 
-  it.skip('should fail silently if the column is not found', () => {
+  it('should fail silently if the column is not found', () => {
     const placeholder = 'Coluna Inexistente';
 
     render(
@@ -102,10 +120,10 @@ describe('DataTableTextFilter', () => {
       target: { value: 'teste' }
     });
 
+    act(() => {
+      vi.advanceTimersByTime(500);
+    });
+
     expect(mockSetFilterValue).not.toHaveBeenCalled();
-    expect(MockInput).toHaveBeenCalledWith(
-      expect.objectContaining({ value: undefined }),
-      undefined
-    );
   });
 });
