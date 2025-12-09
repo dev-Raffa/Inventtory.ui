@@ -1,106 +1,75 @@
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import { SimpleDataTable } from './';
 import type { ColumnDef } from '@tanstack/react-table';
+import { SimpleDataTable } from './index';
 
-const { mockFlexRender, mockUseReactTable } = vi.hoisted(() => {
-  const mockFlexRender = vi.fn((content) => `RENDERED: ${content}`);
-  const mockUseReactTable = vi.fn();
+interface TestData {
+  id: string;
+  name: string;
+  role: string;
+}
 
-  return {
-    mockFlexRender,
-    mockUseReactTable
-  };
-});
+const mockData: TestData[] = [
+  { id: '1', name: 'Ana Silva', role: 'Admin' },
+  { id: '2', name: 'João Santos', role: 'User' }
+];
 
-vi.mock('@tanstack/react-table', async (importOriginal) => {
-  const mod = await importOriginal<typeof import('@tanstack/react-table')>();
-  return {
-    ...mod,
-    useReactTable: mockUseReactTable,
-    flexRender: mockFlexRender
-  };
-});
+const mockColumns: ColumnDef<TestData>[] = [
+  {
+    accessorKey: 'name',
+    header: 'Nome Completo'
+  },
+  {
+    accessorKey: 'role',
+    header: 'Função'
+  }
+];
 
-const mockHeaderContent = 'Nome da Coluna';
-const mockCellContent = 'Dado da Célula';
+describe('SimpleDataTable Component', () => {
+  describe('Rendering Data', () => {
+    it('should render headers and rows correctly when data is provided', () => {
+      render(<SimpleDataTable data={mockData} columns={mockColumns} />);
 
-const mockCell = {
-  id: 'c1',
-  column: { columnDef: { cell: mockCellContent } },
-  getContext: vi.fn()
-};
-const mockRow = {
-  id: 'r1',
-  getVisibleCells: vi.fn(() => [mockCell])
-};
+      expect(
+        screen.getByRole('columnheader', { name: 'Nome Completo' })
+      ).toBeInTheDocument();
 
-const mockHeader = {
-  id: 'h1',
-  isPlaceholder: false,
-  colSpan: 1,
-  getContext: vi.fn(),
-  column: { columnDef: { header: mockHeaderContent } }
-};
+      expect(
+        screen.getByRole('columnheader', { name: 'Função' })
+      ).toBeInTheDocument();
 
-const mockPlaceholderHeader = {
-  ...mockHeader,
-  id: 'h2',
-  isPlaceholder: true
-};
-
-const mockTableInstance = {
-  getHeaderGroups: vi.fn(() => [
-    { id: 'hg1', headers: [mockHeader, mockPlaceholderHeader] }
-  ]),
-  getRowModel: vi.fn(() => ({ rows: [mockRow] }))
-};
-
-describe('SimpleDataTable', () => {
-  const mockData = [{ id: 1, name: 'Produto' }];
-  const mockColumns: ColumnDef<any>[] = [{ accessorKey: 'id' }];
-  const mockMeta = { parentData: { context: 'test' } };
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockUseReactTable.mockReturnValue(mockTableInstance as any);
+      expect(screen.getByText('Ana Silva')).toBeInTheDocument();
+      expect(screen.getByText('Admin')).toBeInTheDocument();
+      expect(screen.getByText('João Santos')).toBeInTheDocument();
+    });
   });
 
-  it('must call useReactTable with data, columns, getCoreRowModel, and meta (if provided)', () => {
-    render(
-      <SimpleDataTable data={mockData} columns={mockColumns} meta={mockMeta} />
-    );
+  describe('Empty States (Branch Coverage)', () => {
+    it('should render the default empty message when data is empty and no custom message is provided', () => {
+      render(<SimpleDataTable data={[]} columns={mockColumns} />);
 
-    expect(mockUseReactTable).toHaveBeenCalledTimes(1);
+      const cell = screen.getByRole('cell');
 
-    const options = mockUseReactTable.mock.calls[0][0];
+      expect(cell).toHaveTextContent('Nenhum registro disponível.');
+      expect(cell).toHaveClass('text-muted-foreground');
+      expect(cell).toHaveAttribute('colspan', '2');
+    });
 
-    expect(options.data).toBe(mockData);
-    expect(options.columns).toBe(mockColumns);
-    expect(options.meta).toBe(mockMeta);
-    expect(options.getCoreRowModel).toBeInstanceOf(Function);
-  });
+    it('should render the custom empty message when provided', () => {
+      const customMessage = 'Não há itens para exibir neste momento.';
 
-  it('should render the headers and call flexRender, ignoring placeholders', () => {
-    render(<SimpleDataTable data={mockData} columns={mockColumns} />);
+      render(
+        <SimpleDataTable
+          data={[]}
+          columns={mockColumns}
+          emptyMessage={customMessage}
+        />
+      );
 
-    expect(screen.getAllByRole('columnheader')).toHaveLength(2);
-    expect(mockFlexRender).toHaveBeenCalledTimes(2);
-    expect(
-      screen.getByText(`RENDERED: ${mockHeaderContent}`)
-    ).toBeInTheDocument();
-
-    expect(mockPlaceholderHeader.isPlaceholder).toBe(true);
-  });
-
-  it('should render the rows and cells and call flexRender for the body', () => {
-    render(<SimpleDataTable data={mockData} columns={mockColumns} />);
-
-    expect(screen.getAllByRole('row')).toHaveLength(2);
-    expect(screen.getAllByRole('cell')).toHaveLength(1);
-    expect(mockFlexRender).toHaveBeenCalledTimes(2);
-    expect(
-      screen.getByText(`RENDERED: ${mockCellContent}`)
-    ).toBeInTheDocument();
+      expect(screen.getByText(customMessage)).toBeInTheDocument();
+      expect(
+        screen.queryByText('Nenhum registro disponível.')
+      ).not.toBeInTheDocument();
+    });
   });
 });
