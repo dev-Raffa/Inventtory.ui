@@ -1,20 +1,30 @@
-import { redirect } from 'react-router';
-import { AuthService } from '@/app/features/auth/services';
+import { redirect, type LoaderFunctionArgs } from 'react-router';
+import { supabase } from '@/app/config/supabase';
 
-export async function protectedLoader() {
-  const isAuthenticated = await AuthService.isAuthenticated();
+async function isAuthenticated(): Promise<boolean> {
+  const { data } = await supabase.auth.getSession();
+  return !!data.session;
+}
 
-  if (!isAuthenticated) {
-    return redirect('/auth/login');
+export async function protectedLoader({ request }: LoaderFunctionArgs) {
+  const isAuth = await isAuthenticated();
+
+  if (!isAuth) {
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+    const search = url.search;
+    const redirectTo = pathname + search;
+
+    return redirect(`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`);
   }
 
   return null;
 }
 
 export async function publicLoader() {
-  const isAuthenticated = await AuthService.isAuthenticated();
+  const isAuth = await isAuthenticated();
 
-  if (isAuthenticated) {
+  if (isAuth) {
     return redirect('/');
   }
 
