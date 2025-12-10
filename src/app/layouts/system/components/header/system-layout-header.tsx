@@ -1,5 +1,5 @@
 import { BellIcon } from 'lucide-react';
-import { Logo } from '@/app/components/shared/logo/logo';
+import { Logo } from '@/app/components/shared/logo';
 import { Button } from '@/app/components/ui/button';
 import { UserNav } from '../user-nav';
 
