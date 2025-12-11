@@ -23,11 +23,9 @@ export interface SignUpPayload {
 
 export interface AuthContextType {
   session: Session | null;
-  user: User | null;
+  authUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  // [REMOVIDO]: signIn, signUp, signOut.
-  // Agora essas ações são importadas diretamente dos hooks de mutation.
 }
 
 export interface CreateUserMetadataDTO {

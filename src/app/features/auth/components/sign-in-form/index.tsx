@@ -19,7 +19,7 @@ import {
   CardFooter,
   CardHeader
 } from '@/app/components/ui/card';
-import { Logo } from '@/app/components/shared/logo/logo';
+import { Logo } from '@/app/components/shared/logo';
 import { useSignInMutation } from '../../hooks/use-query';
 
 export function SignInForm() {
@@ -41,7 +41,10 @@ export function SignInForm() {
       })
       .catch(() => {
         form.setValue('password', '');
-        form.setFocus('password');
+
+        setTimeout(() => {
+          form.setFocus('password');
+        }, 0);
 
         return;
       });

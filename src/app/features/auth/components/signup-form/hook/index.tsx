@@ -82,7 +82,6 @@ export function SignUpFormProvider({ children }: { children: ReactNode }) {
   };
 
   const handleSubmit = async (data: SignUpFormData) => {
-    console.log(data);
     await mutateAsync(data)
       .then(() => {
         navigate('/', { replace: true });

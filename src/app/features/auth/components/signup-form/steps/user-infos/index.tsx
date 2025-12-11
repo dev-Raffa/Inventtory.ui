@@ -6,7 +6,7 @@ import {
   FormMessage
 } from '@/app/components/ui/form';
 import { Input } from '@/app/components/ui/input';
-import { PasswordRequirement } from './password-requitements';
+import { PasswordRequirement } from './password-requirements';
 import { useSignUpForm } from '../../hook';
 
 export function UserStep() {

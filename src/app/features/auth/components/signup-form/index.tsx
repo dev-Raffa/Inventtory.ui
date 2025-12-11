@@ -5,7 +5,7 @@ import {
 } from '@/app/components/shared/wizard';
 import { steps } from './steps';
 import { SignUpFormProvider, useSignUpForm } from './hook';
-import { Logo } from '@/app/components/shared/logo/logo';
+import { Logo } from '@/app/components/shared/logo';
 
 function SignUpFormContent() {
   const { actions } = useSignUpForm();
