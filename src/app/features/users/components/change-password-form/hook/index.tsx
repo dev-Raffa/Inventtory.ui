@@ -1,16 +1,14 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { toast } from 'sonner';
 import { changePasswordSchema, type ChangePasswordFormData } from '../schema';
-import { UserService } from '../../../services';
+import { useUpdatePasswordMutation } from '../../../hooks/use-query';
 
 type UseChangePasswordProps = {
   onSuccess?: () => void;
 };
 
 export function useChangePassword({ onSuccess }: UseChangePasswordProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { mutateAsync, isPending } = useUpdatePasswordMutation();
 
   const form = useForm<ChangePasswordFormData>({
     resolver: zodResolver(changePasswordSchema),
@@ -22,28 +20,19 @@ export function useChangePassword({ onSuccess }: UseChangePasswordProps) {
   });
 
   const handleSubmit = async (data: ChangePasswordFormData) => {
-    try {
-      setIsSubmitting(true);
-      await UserService.updatePassword(data.password);
-
-      toast.success('Senha atualizada com sucesso!');
-      form.reset();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('Erro inesperado ao atualizar a senha.');
+    await mutateAsync(data.password, {
+      onSuccess: () => {
+        form.reset();
+        onSuccess?.();
       }
-    } finally {
-      setIsSubmitting(false);
-    }
+    }).catch(() => {
+      return;
+    });
   };
 
   return {
     form,
-    isSubmitting,
+    isSubmitting: isPending,
     handleSubmit
   };
 }

@@ -1,18 +1,18 @@
 import { useState, useCallback } from 'react';
-import { toast } from 'sonner';
-import { UserService } from '@/app/features/users/services';
-import { uploadImageToCloudinary } from '@/app/services/image-upload';
 import type { FileWithPreview } from '@/app/components/shared/file-picker/types';
-import { useAuth } from '@/app/features/auth/hooks/use-auth';
-import { getCroppedImg, type PixelCrop } from '@/lib/utils';
+import { type PixelCrop } from '@/lib/utils';
+import { useUser } from '../../../hooks/use-user';
+import { useUpdateAvatarMutation } from '../../../hooks/use-query';
 
 type UseAvatarChangeProps = {
   onSuccess?: () => void;
 };
 
 export function useAvatarChange({ onSuccess }: UseAvatarChangeProps) {
-  const { user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useUser();
+
+  const { mutate, isPending } = useUpdateAvatarMutation();
+
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -21,7 +21,7 @@ export function useAvatarChange({ onSuccess }: UseAvatarChangeProps) {
   );
 
   const onCropComplete = useCallback(
-    (_croppedArea: any, croppedAreaPixels: PixelCrop) => {
+    (_croppedArea: unknown, croppedAreaPixels: PixelCrop) => {
       setCroppedAreaPixels(croppedAreaPixels);
     },
     []
@@ -33,38 +33,22 @@ export function useAvatarChange({ onSuccess }: UseAvatarChangeProps) {
     setZoom(1);
   };
 
-  const handleSave = async () => {
-    if (!user) return;
+  const handleSave = () => {
+    if (!user || files.length === 0 || !croppedAreaPixels) return;
 
-    if (files.length === 0 || !croppedAreaPixels) {
-      toast.error('Selecione e ajuste a imagem.');
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-
-      const croppedFile = await getCroppedImg(files[0].src, croppedAreaPixels);
-
-      if (!croppedFile) {
-        throw new Error('Falha ao processar a imagem.');
+    mutate(
+      {
+        userId: user.id,
+        imageSrc: files[0].src,
+        pixelCrop: croppedAreaPixels
+      },
+      {
+        onSuccess: () => {
+          reset();
+          onSuccess?.();
+        }
       }
-
-      const { url } = await uploadImageToCloudinary(croppedFile);
-
-      await UserService.updateAvatar(user.id, url);
-
-      toast.success('Avatar atualizado!');
-
-      reset();
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-
-      toast.error('Erro ao atualizar avatar.');
-    } finally {
-      setIsSubmitting(false);
-    }
+    );
   };
 
   return {
@@ -75,7 +59,7 @@ export function useAvatarChange({ onSuccess }: UseAvatarChangeProps) {
     zoom,
     setZoom,
     onCropComplete,
-    isSubmitting,
+    isSubmitting: isPending,
     handleSave,
     reset,
     userAvatar: user?.avatarUrl

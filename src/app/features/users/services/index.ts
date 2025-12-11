@@ -1,6 +1,7 @@
 import { supabase } from '@/app/config/supabase';
-import type { User, UserProfileDTO } from '../types';
+import { handleUserError } from './error-handler';
 import { UserMapper } from './mappers';
+import type { User, UserProfileDTO } from '../types';
 
 const SELECT_PROFILE_QUERY = `
   id,
@@ -20,8 +21,10 @@ async function getProfile(userId: string): Promise<User | null> {
     .overrideTypes<UserProfileDTO, { merge: false }>();
 
   if (error) {
-    console.error('Erro ao buscar perfil:', error);
-    return null;
+    if (error.code === 'PGRST116') {
+      return null;
+    }
+    return handleUserError(error, 'getProfile');
   }
 
   if (!data) return null;
@@ -29,25 +32,21 @@ async function getProfile(userId: string): Promise<User | null> {
   return UserMapper.toDomain(data, userId);
 }
 
-async function updateAvatar(userId: string, avatarUrl: string) {
+async function updateAvatar(userId: string, avatarUrl: string): Promise<void> {
   const { error } = await supabase
     .from('profiles')
     .update({ avatar_url: avatarUrl })
     .eq('id', userId);
 
-  if (error) {
-    throw new Error('Erro ao atualizar a imagem de perfil.');
-  }
+  if (error) handleUserError(error, 'updateAvatar');
 }
 
-async function updatePassword(password: string) {
+async function updatePassword(password: string): Promise<void> {
   const { error } = await supabase.auth.updateUser({
     password
   });
 
-  if (error) {
-    throw new Error('Não foi possível atualizar a senha. Tente novamente.');
-  }
+  if (error) handleUserError(error, 'updatePassword');
 }
 
 export const UserService = {

@@ -12,7 +12,7 @@ import {
   FilePicker,
   FilePickerButton,
   FilePickerInput
-} from '@/app/components/shared/file-picker/exports';
+} from '@/app/components/shared/file-picker';
 
 import { useAvatarChange } from './hook';
 
