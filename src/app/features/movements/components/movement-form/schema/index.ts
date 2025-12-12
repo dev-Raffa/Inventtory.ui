@@ -21,6 +21,7 @@ export const baseMovementSchema = z.object({
     ),
   reason: z.string().min(1, 'Selecione o motivo da movimentação'),
   documentNumber: z.string().optional(),
+  totalQuantity: z.number(),
   items: z
     .array(movementItemSchema)
     .min(1, 'Adicione pelo menos um item à movimentação')

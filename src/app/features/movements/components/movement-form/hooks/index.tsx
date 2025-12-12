@@ -10,11 +10,7 @@ import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useCreateMovementMutation } from '../../../hooks/use-query';
 import { movementSchema, type MovementFormData } from '../schema';
-import type {
-  CreateMovementDTO,
-  MovementItem,
-  MovementType
-} from '../../../types/model';
+import type { MovementItem, MovementType } from '../../../types/model';
 import { ReasonOptions, type reason } from '../consts';
 import type { IProduct } from '@/app/features/products/types/models';
 import { useProductsQuery } from '@/app/features/products/hooks/use-query';
@@ -102,10 +98,15 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
 
   const addItem = (newItems: MovementItem[]) => {
     const currentItems = form.getValues('items');
+    let totalItems = form.getValues('totalQuantity') | 0;
+
+    newItems.forEach((item) => (totalItems += item.quantity));
 
     form.setValue('items', [...currentItems, ...newItems], {
       shouldValidate: true
     });
+
+    form.setValue('totalQuantity', totalItems);
 
     setIsDialogOpen(false);
     setSelectedProduct(null);
@@ -113,9 +114,13 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
 
   const removeItem = (index: number) => {
     const currentItems = form.getValues('items');
+    const totalItems = form.getValues('totalQuantity') | 0;
+
+    const updattedTotalItems = totalItems - currentItems[index].quantity;
     const updatedItems = currentItems.filter((_, i) => i !== index);
 
     form.setValue('items', updatedItems, { shouldValidate: true });
+    form.setValue('totalQuantity', updattedTotalItems);
   };
 
   const handleSubmit = async (data: MovementFormData) => {
@@ -131,20 +136,8 @@ export function MovementFormProvider({ children }: { children: ReactNode }) {
       combinedDate.setHours(now.getHours(), now.getMinutes());
     }
 
-    const payload: CreateMovementDTO = {
-      type: data.type,
-      date: combinedDate,
-      reason: data.reason,
-      documentNumber: data.documentNumber,
-      items: data.items.map((item) => ({
-        productId: item.productId,
-        variantId: item.variantId,
-        quantity: item.quantity
-      }))
-    };
-
     try {
-      const promise = createMutation.mutateAsync(payload);
+      const promise = createMutation.mutateAsync(data);
 
       toast.promise(promise, {
         loading: 'Registrando movimentação...',

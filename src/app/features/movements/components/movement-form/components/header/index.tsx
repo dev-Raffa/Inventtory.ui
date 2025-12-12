@@ -125,7 +125,6 @@ export function MovementFormHeader() {
                           disabled={(date) =>
                             date > new Date() || date < new Date('1900-01-01')
                           }
-                          initialFocus
                         />
                       </PopoverContent>
                     </Popover>
@@ -143,7 +142,7 @@ export function MovementFormHeader() {
                       <Input
                         type="time"
                         step="1"
-                        defaultValue="10:30:00"
+                        defaultValue={new Date().toLocaleTimeString()}
                         className="bg-background appearance-none [&::-webkit-calendar-picker-indicator]:hidden [&::-webkit-calendar-picker-indicator]:appearance-none"
                         {...field}
                       />

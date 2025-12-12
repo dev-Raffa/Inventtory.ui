@@ -45,3 +45,20 @@ export interface MovementDTO {
   } | null;
   movement_items: MovementItemDTO[];
 }
+
+export interface CreateMovementRPCPayload {
+  type: string;
+  date: string;
+  reason: string;
+  document_number?: string | null;
+  total_quantity: number;
+  items: Array<{
+    product_id: string;
+    variant_id?: string | null;
+    quantity: number;
+  }>;
+}
+
+export interface CreateMovementRPCArgs {
+  payload: CreateMovementRPCPayload;
+}

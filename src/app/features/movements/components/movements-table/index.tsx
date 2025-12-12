@@ -21,7 +21,7 @@ import {
   DataTableSelectFilter,
   DataTableTextFilter,
   PaginationControllers
-} from '@/app/components/shared/datatable/exports';
+} from '@/app/components/shared/datatable';
 
 export function MovementsListTable({ data }: { data: MovementResponse[] }) {
   const [isExpanded, setIsExpanded] = useState<ExpandedState>({});

@@ -4,7 +4,7 @@ import { useMovementForm } from '../../hooks';
 
 export function MovementFormFooter() {
   const { form } = useMovementForm();
-  const totalItems = form.getValues('items').length;
+  const totalItems = form.getValues('totalQuantity');
 
   return (
     <div className="absolute bottom-0 left-0 rounded-xl right-0 border-t py-4 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] bg-background z-20">

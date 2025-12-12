@@ -1,7 +1,12 @@
 import { supabase } from '@/app/config/supabase';
-import type { CreateMovementDTO, MovementResponse } from '../types/model';
 import { MovementMapper } from './mapper';
-import type { MovementDTO } from '../types/dto';
+import { handleMovementError } from './error-handler';
+import type {
+  CreateMovementRPCArgs,
+  Movement,
+  MovementDTO,
+  MovementResponse
+} from '../types';
 
 interface GetAllFilters {
   productId?: string;
@@ -36,38 +41,41 @@ const SelectQuery = `
 `;
 
 async function getAll(filters?: GetAllFilters): Promise<MovementResponse[]> {
-  let query = supabase
-    .from('movements')
-    .select(SelectQuery)
-    .order('date', { ascending: false });
+  try {
+    let query = supabase
+      .from('movements')
+      .select(SelectQuery)
+      .order('date', { ascending: false });
 
-  if (filters?.productId) {
-    query = query.eq('movement_items.product_id', filters.productId);
+    if (filters?.productId) {
+      query = query.eq('movement_items.product_id', filters.productId);
+    }
+
+    const { data, error } = await query.overrideTypes<
+      Array<MovementDTO>,
+      { merge: false }
+    >();
+
+    if (error) throw error;
+
+    return data.map(MovementMapper.toDomain);
+  } catch (error) {
+    handleMovementError(error, 'getAll');
   }
-
-  const { data, error } = await query.overrideTypes<
-    Array<MovementDTO>,
-    { merge: false }
-  >();
-
-  if (error) {
-    throw new Error(`Erro ao buscar movimentações: ${error.message}`);
-  }
-
-  return data.map(MovementMapper.toDomain);
 }
 
-async function create(payload: CreateMovementDTO): Promise<void> {
-  const { error } = await supabase.rpc('create_stock_movement', {
-    payload: {
-      ...payload,
-      date:
-        payload.date instanceof Date ? payload.date.toISOString() : payload.date
-    }
-  });
+async function create(payload: Movement): Promise<void> {
+  try {
+    const args = MovementMapper.toPersistence(payload);
 
-  if (error) {
-    throw new Error(`Erro ao criar movimentação: ${error.message}`);
+    const { error } = await supabase.rpc<
+      'create_stock_movement',
+      CreateMovementRPCArgs
+    >('create_stock_movement', args);
+
+    if (error) throw error;
+  } catch (error) {
+    handleMovementError(error, 'create');
   }
 }
 

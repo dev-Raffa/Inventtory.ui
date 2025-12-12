@@ -1,16 +1,11 @@
-import type { MovementDTO, MovementItemDTO } from '../types/dto';
-import type { MovementResponse } from '../types/model';
-
-const getInitials = (name: string) => {
-  return (
-    name
-      .match(/(^\S\S?|\b\S)?/g)
-      ?.join('')
-      .match(/(^\S|\S$)?/g)
-      ?.join('')
-      .toUpperCase() || 'US'
-  );
-};
+import { getUserNameInitials } from '../../users/utils';
+import type {
+  CreateMovementRPCArgs,
+  Movement,
+  MovementDTO,
+  MovementItemDTO,
+  MovementResponse
+} from '../types';
 
 const resolveItemImage = (item: MovementItemDTO): string => {
   if (item.variant_id && item.product_variants?.variant_images) {
@@ -48,7 +43,7 @@ export const MovementMapper = {
       totalQuantity: data.total_quantity,
       user: {
         name: userName,
-        initials: getInitials(userName),
+        initials: getUserNameInitials(userName),
         avatar: data.profiles?.avatar_url
       },
       items: data.movement_items?.map((item) => {
@@ -67,6 +62,23 @@ export const MovementMapper = {
           currentStock: item.current_stock
         };
       })
+    };
+  },
+  toPersistence(domain: Movement): CreateMovementRPCArgs {
+    return {
+      payload: {
+        type: domain.type,
+        date:
+          domain.date instanceof Date ? domain.date.toISOString() : domain.date,
+        reason: domain.reason,
+        document_number: domain.documentNumber || null,
+        total_quantity: domain.totalQuantity,
+        items: domain.items.map((item) => ({
+          product_id: item.productId,
+          variant_id: item.variantId || null,
+          quantity: item.quantity
+        }))
+      }
     };
   }
 };

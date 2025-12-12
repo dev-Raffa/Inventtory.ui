@@ -1,5 +1,3 @@
-import type { User } from '../../users/types';
-
 export type MovementType = 'entry' | 'withdrawal' | 'adjustment';
 
 export interface MovementItem {
@@ -19,18 +17,6 @@ export interface Movement {
   documentNumber?: string;
   totalQuantity: number;
   items: MovementItem[];
-}
-
-export interface CreateMovementDTO {
-  type: MovementType;
-  date: Date;
-  reason: string;
-  user?: Pick<User, 'avatarUrl' | 'fullName'>;
-  documentNumber?: string;
-  items: {
-    variantId?: string;
-    quantity: number;
-  }[];
 }
 
 export interface MovementItemResponse {

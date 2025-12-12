@@ -2,7 +2,7 @@ import type { ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { HeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
+import { DataTableHeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
 import { dateRangeFilter } from '@/app/components/shared/datatable/utils';
 import { Badge } from '@/app/components/ui/badge';
 import { Button } from '@/app/components/ui/button';
@@ -18,7 +18,7 @@ export const columnsMovementsListTable: ColumnDef<MovementResponse>[] = [
     accessorKey: 'date',
     minSize: 50,
     header: ({ column }) => (
-      <HeaderSortableColumn column={column} title="Data" />
+      <DataTableHeaderSortableColumn column={column} title="Data" />
     ),
     cell: ({ row }) => {
       const date = new Date(row.original.date);
