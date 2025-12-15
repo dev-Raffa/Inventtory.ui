@@ -1,85 +1,99 @@
-import { cleanup, render, screen } from '@testing-library/react';
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { ProductTableColumnStock } from './column-stock';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { MemoryRouter } from 'react-router';
+import { ProductTableColumnActions } from './column-action';
+import userEvent from '@testing-library/user-event';
 
-vi.mock('@/app/components/ui/tooltip', () => ({
-  Tooltip: ({ children }: any) => (
-    <div data-testid="tooltip-wrapper">{children}</div>
-  ),
-  TooltipTrigger: ({ children }: any) => (
-    <div data-testid="trigger-wrapper">{children}</div>
-  ),
-  TooltipContent: ({ children }: any) => (
-    <div data-testid="tooltip-content">{children}</div>
-  )
-}));
+vi.mock('react-router', async (importOriginal) => {
+  const mod = await importOriginal<typeof import('react-router')>();
 
-vi.mock('@/app/components/ui/button', () => ({
-  Button: ({ children }: any) => (
-    <div data-testid="button-content">{children}</div>
-  )
-}));
+  return {
+    ...mod,
+    Link: ({ to, children, className }: any) => (
+      <a
+        href={to}
+        className={className}
+        data-testid={`link-${children[1].toLowerCase().trim().replace(' ', '-')}`}
+      >
+        {children}
+      </a>
+    )
+  };
+});
 
-const renderAndCheckColor = (totalStock: number, minimunStock?: number) => {
-  render(
-    <ProductTableColumnStock
-      totalStock={totalStock}
-      minimumStock={minimunStock}
-    />
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock;
+window.PointerEvent = MouseEvent as typeof PointerEvent;
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
+const renderComponent = (productId: string) => {
+  return render(
+    <MemoryRouter>
+      <ProductTableColumnActions productId={productId} />
+    </MemoryRouter>
   );
-
-  const iconContainer = screen.getByTestId('button-content');
-
-  if (iconContainer.querySelector('.text-red-700')) return 'RED';
-  if (iconContainer.querySelector('.text-orange-400')) return 'ORANGE';
-  if (iconContainer.querySelector('.text-green-600')) return 'GREEN';
-  return 'NONE';
 };
 
-describe('ProductTableColumnStock', () => {
-  afterEach(() => {
-    cleanup();
+describe('ProductTableColumnActions', () => {
+  const TEST_PRODUCT_ID = 'prod-xyz-123';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 
-  it.skip('must render the Tooltip content correctly', () => {
-    const T = 50;
-    const M = 10;
+  it('should render the menu trigger button', () => {
+    renderComponent(TEST_PRODUCT_ID);
 
-    render(<ProductTableColumnStock totalStock={T} minimumStock={M} />);
+    expect(
+      screen.getByRole('button', { name: /toggle menu/i })
+    ).toBeInTheDocument();
+  });
 
-    expect(screen.getByTestId('tooltip-content')).toHaveTextContent(
-      `estoque atual: ${T}`
+  it('should open the menu and display all action items', async () => {
+    const user = userEvent.setup();
+
+    renderComponent(TEST_PRODUCT_ID);
+
+    const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
+
+    await user.click(triggerButton);
+
+    const menuItems = await screen.findAllByRole('menuitem');
+
+    expect(menuItems).toHaveLength(4);
+    expect(screen.getByText('Detalhes')).toBeInTheDocument();
+    expect(screen.getByText('Editar')).toBeInTheDocument();
+    expect(screen.getByText('Ver Histórico')).toBeInTheDocument();
+    expect(screen.getByText('Registrar Movimentação')).toBeInTheDocument();
+  });
+
+  it('should generate the "Details" and "Edit" links with the correct product ID', async () => {
+    const user = userEvent.setup();
+
+    renderComponent(TEST_PRODUCT_ID);
+
+    const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
+
+    await user.click(triggerButton);
+
+    const linkDetalhes = await screen.findByTestId('link-detalhes');
+
+    expect(linkDetalhes).toHaveAttribute(
+      'href',
+      `/products/${TEST_PRODUCT_ID}`
     );
-    expect(screen.getByTestId('tooltip-content')).toHaveTextContent(
-      `estoque minimo: ${M}`
+
+    const linkEditar = await screen.findByTestId('link-editar');
+
+    expect(linkEditar).toHaveAttribute(
+      'href',
+      `/products/${TEST_PRODUCT_ID}/edit`
     );
-  });
-
-  it('should display the RED icon when the stock is zero', () => {
-    expect(renderAndCheckColor(0, 5)).toBe('RED');
-  });
-
-  it('The RED icon should be displayed when the stock level is below the minimum', () => {
-    expect(renderAndCheckColor(4, 5)).toBe('RED');
-  });
-
-  it('should display the ORANGE (Alert) icon when the stock is close to the minimum [M=5]', () => {
-    expect(renderAndCheckColor(6, 5)).toBe('ORANGE');
-  });
-
-  it('should display the ORANGE (Alert) icon when the stock is close to the minimum [M=8]', () => {
-    expect(renderAndCheckColor(9, 8)).toBe('ORANGE');
-  });
-
-  it('should display the GREEN (OK) icon when the stock is secure', () => {
-    expect(renderAndCheckColor(7, 5)).toBe('GREEN');
-  });
-
-  it('The GREEN icon should be displayed when the minimum is not met and the stock is positive', () => {
-    expect(renderAndCheckColor(1, undefined)).toBe('GREEN');
-  });
-
-  it('The RED icon should be displayed when the minimum amount is not met and the stock is zero', () => {
-    expect(renderAndCheckColor(0, undefined)).toBe('RED');
   });
 });

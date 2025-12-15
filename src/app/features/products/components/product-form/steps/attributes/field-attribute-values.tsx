@@ -34,6 +34,7 @@ export function ProductsFormFieldAttributeValues({
               <Input
                 placeholder="ex: Pequeno, Medio, Grande (separados por vírgula)"
                 {...field}
+                value={field.value || ''}
               />
             </FormControl>
             <FormMessage />

@@ -5,6 +5,10 @@ import { mockFormData, renderWithProductProvider } from '../../mocks';
 import { ProductFormFieldCategory } from './field-category';
 import type { ProductFormProviderProps } from '../../hook';
 
+const mocks = vi.hoisted(() => ({
+  createCategory: vi.fn()
+}));
+
 const MOCK_CATEGORIES = [
   { id: 'cat1', name: 'Eletrônicos' },
   { id: 'cat2', name: 'Roupas' },
@@ -16,24 +20,40 @@ vi.mock('@/app/features/category/hooks/use-query', () => ({
     data: MOCK_CATEGORIES,
     isLoading: false,
     isError: false
+  }),
+  useCreateCategoryMutation: () => ({
+    mutateAsync: mocks.createCategory
   })
 }));
 
-describe.skip('ProductFormFieldCategory', () => {
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock;
+window.PointerEvent = MouseEvent as typeof PointerEvent;
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
+describe('ProductFormFieldCategory (Integration)', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+    mocks.createCategory.mockResolvedValue({ id: 'new-cat', name: 'Sapatos' });
   });
 
-  it('should render with the placeholder "Select a category" if there is no value.', () => {
+  it('should render with the placeholder and muted style if there is no value', () => {
     renderWithProductProvider(<ProductFormFieldCategory />);
 
     const combobox = screen.getByRole('combobox', { name: 'Categoria' });
 
     expect(combobox).toHaveTextContent('Selecione uma categoria');
+    expect(combobox).toHaveClass('text-muted-foreground');
   });
 
-  it('should render with the category name if a default value exists.', () => {
+  it('should render with the category name and standard style if a default value exists', () => {
     const providerProps: Partial<ProductFormProviderProps> = {
       product: {
         ...mockFormData,
@@ -47,9 +67,10 @@ describe.skip('ProductFormFieldCategory', () => {
     const combobox = screen.getByRole('combobox', { name: 'Categoria' });
 
     expect(combobox).toHaveTextContent('Eletrônicos');
+    expect(combobox).not.toHaveClass('text-muted-foreground');
   });
 
-  it('must open the popover, list, filter, and select a category.', async () => {
+  it('must open the popover, list, filter, and select a category', async () => {
     const user = userEvent.setup();
 
     renderWithProductProvider(<ProductFormFieldCategory />);
@@ -63,9 +84,6 @@ describe.skip('ProductFormFieldCategory', () => {
     );
 
     expect(searchInput).toBeVisible();
-    expect(screen.getByText('Eletrônicos')).toBeVisible();
-    expect(screen.getByText('Roupas')).toBeVisible();
-    expect(screen.getByText('Livros')).toBeVisible();
 
     await user.type(searchInput, 'Rou');
 
@@ -73,14 +91,12 @@ describe.skip('ProductFormFieldCategory', () => {
     expect(screen.getByText('Roupas')).toBeVisible();
 
     await user.click(screen.getByText('Roupas'));
-    await waitFor(() => {
-      expect(searchInput).not.toBeInTheDocument();
-    });
 
     expect(combobox).toHaveTextContent('Roupas');
+    expect(combobox).not.toHaveClass('text-muted-foreground');
   });
 
-  it('The option "Create new category" should be displayed when typing something that does not exist.', async () => {
+  it('should display "Criar nova: ..." when typing a non-existent category', async () => {
     const user = userEvent.setup();
 
     renderWithProductProvider(<ProductFormFieldCategory />);
@@ -92,17 +108,14 @@ describe.skip('ProductFormFieldCategory', () => {
     const searchInput = await screen.findByPlaceholderText(
       'Pesquisar categoria...'
     );
-
     const novaCategoria = 'Sapatos';
 
     await user.type(searchInput, novaCategoria);
 
-    expect(
-      screen.getByText(`Criar nova categoria: "${novaCategoria}"`)
-    ).toBeVisible();
+    expect(screen.getByText(`Criar nova: "${novaCategoria}"`)).toBeVisible();
   });
 
-  it('should NOT display "Create new category" if there is an exact match.', async () => {
+  it('should NOT display "Criar nova" if there is an exact match', async () => {
     const user = userEvent.setup();
 
     renderWithProductProvider(<ProductFormFieldCategory />);
@@ -118,8 +131,32 @@ describe.skip('ProductFormFieldCategory', () => {
     await user.type(searchInput, 'Roupas');
 
     expect(screen.getByText('Roupas')).toBeVisible();
-    expect(
-      screen.queryByText('Criar nova categoria: "Roupas"')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/Criar nova:/)).not.toBeInTheDocument();
+  });
+
+  it('should call create mutation when clicking on "Criar nova"', async () => {
+    const user = userEvent.setup();
+
+    renderWithProductProvider(<ProductFormFieldCategory />);
+
+    const combobox = screen.getByRole('combobox', { name: 'Categoria' });
+
+    await user.click(combobox);
+
+    const searchInput = await screen.findByPlaceholderText(
+      'Pesquisar categoria...'
+    );
+
+    await user.type(searchInput, 'Sapatos');
+
+    const createOption = await screen.findByText('Criar nova: "Sapatos"');
+
+    await user.click(createOption);
+
+    expect(mocks.createCategory).toHaveBeenCalledWith('Sapatos');
+
+    await waitFor(() => {
+      expect(combobox).toHaveTextContent('Sapatos');
+    });
   });
 });

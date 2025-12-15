@@ -1,6 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import type { IProduct } from '@/app/features/products/types/models';
-import { HeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
+import { DataTableHeaderSortableColumn } from '@/app/components/shared/datatable/pieces/datatable-header-sortable-column';
 import { ProductTableColumnImages } from './column-images';
 import { ProductTableColumnStock } from './column-stock';
 import { ProductTableColumnActions } from './column-action';
@@ -25,7 +25,7 @@ export const columnsProductListTable: ColumnDef<IProduct>[] = [
     accessorKey: 'name',
     minSize: 250,
     header: ({ column }) => (
-      <HeaderSortableColumn column={column} title="Nome" />
+      <DataTableHeaderSortableColumn column={column} title="Nome" />
     ),
     cell: ({ row }) => <p className="font-normal">{row.original.name}</p>,
     meta: {

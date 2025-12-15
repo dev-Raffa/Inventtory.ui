@@ -21,7 +21,7 @@ import {
   DataTableTextFilter,
   NestedDataTable,
   PaginationControllers
-} from '@/app/components/shared/datatable/exports';
+} from '@/app/components/shared/datatable';
 import { useProductsQuery } from '../../hooks/use-query';
 
 export function ProductListTable() {
@@ -60,7 +60,11 @@ export function ProductListTable() {
   );
 
   return (
-    <DataTable tableOptions={tableOptions} renderSubRow={renderVariantsDetails}>
+    <DataTable
+      tableOptions={tableOptions}
+      renderSubRow={renderVariantsDetails}
+      emptyMessage="Nenhum produto foi encontrado."
+    >
       <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between bg-card p-4 rounded-lg border shadow-sm">
         <section className="flex flex-1 flex-col sm:flex-row gap-4 w-full">
           <DataTableTextFilter placeholder="Digite Nome ou SKU do produto" />

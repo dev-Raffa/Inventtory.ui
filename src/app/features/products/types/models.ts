@@ -1,5 +1,7 @@
 import type { Category } from '../../category/types';
 
+export type ProductStockStatus = 'critical' | 'warning' | 'healthy';
+
 export interface IProductAttribute {
   name: string;
   values: string;

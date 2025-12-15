@@ -52,27 +52,30 @@ export function ProductSummary() {
 
   const selectedVariantImages: IProductImage[] = useMemo(() => {
     const images: IProductImage[] = [];
-    if (!allImages) {
-      return [];
-    }
 
-    allImages.forEach((image) => {
-      selectedVariant?.images.map(
-        (img) =>
-          img.id === image.id &&
-          images.push({
-            ...image,
-            isPrimary: img.isPrimary
-          })
+    (allImages || []).forEach((image) => {
+      const variantImageConfig = selectedVariant?.images?.find(
+        (img) => img.id === image.id
       );
+
+      if (variantImageConfig) {
+        images.push({
+          ...image,
+          isPrimary: variantImageConfig.isPrimary
+        });
+      }
     });
 
     return images.sort((a, b) => {
       if (a.isPrimary === true) return -1;
       if (b.isPrimary === true) return 1;
+
       return 0;
     });
   }, [selectedVariant, allImages]);
+
+  const imagesToDisplay = !hasVariants ? allImages : selectedVariantImages;
+  const showCarousel = imagesToDisplay && imagesToDisplay.length > 0;
 
   return (
     <div className="space-y-6">
@@ -82,10 +85,12 @@ export function ProductSummary() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="flex h-full w-full items-center justify-center rounded-md bg-muted text-muted-foreground">
-            {allImages && (
-              <ProductImageCarousel
-                images={!hasVariants ? allImages : selectedVariantImages}
-              />
+            {showCarousel ? (
+              <ProductImageCarousel images={imagesToDisplay} />
+            ) : (
+              <div className="flex items-center justify-center h-64 text-sm">
+                Sem imagens
+              </div>
             )}
           </div>
 

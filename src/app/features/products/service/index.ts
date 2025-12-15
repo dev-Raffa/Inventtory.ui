@@ -1,6 +1,8 @@
 import { supabase } from '@/app/config/supabase';
-import type { ProductDTO, IProduct } from '../types';
-import { ProductMapper } from './mappers';
+import { handleProductError } from './error-handler';
+import { ProductMapper } from './mapper';
+import type { IProduct } from '../types/models';
+import type { ProductDTO } from '../types/dto';
 
 const selectQuery = `
   id,
@@ -10,7 +12,7 @@ const selectQuery = `
   stock,
   minimum_stock,
   has_variants,
-  category:categories ( id, name ),
+  categories ( id, name ),
   product_attributes ( name, values ),
   product_images ( id, name, src, public_id, type, is_primary ),
   product_variants (
@@ -20,61 +22,74 @@ const selectQuery = `
 `;
 
 async function getAll(): Promise<IProduct[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select(selectQuery)
-    .order('created_at', { ascending: false })
-    .overrideTypes<Array<ProductDTO>, { merge: false }>();
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(selectQuery)
+      .order('created_at', { ascending: false })
+      .overrideTypes<ProductDTO[], { merge: false }>();
 
-  if (error) {
-    throw new Error('Falha ao buscar produtos');
+    if (error) throw error;
+
+    return data.map(ProductMapper.toDomain);
+  } catch (error) {
+    handleProductError(error, 'getAll');
   }
-
-  return data.map(ProductMapper.toDomain);
 }
 
 async function getOneById(id: string): Promise<IProduct> {
-  const { data, error } = await supabase
-    .from('products')
-    .select(selectQuery)
-    .eq('id', id)
-    .single()
-    .overrideTypes<ProductDTO, { merge: false }>();
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(selectQuery)
+      .eq('id', id)
+      .single()
+      .overrideTypes<ProductDTO, { merge: false }>();
 
-  if (error) {
-    throw new Error(`Erro ao buscar o produto: ${error.message}`);
+    if (error) {
+      if (error.code === 'PGRST116') {
+        throw new Error('Produto não encontrado.');
+      }
+      throw error;
+    }
+
+    return ProductMapper.toDomain(data);
+  } catch (error) {
+    handleProductError(error, 'getOneById');
   }
-
-  return ProductMapper.toDomain(data);
 }
 
 async function add(params: IProduct): Promise<IProduct> {
-  const { data, error } = await supabase.rpc('create_product', {
-    product_data: params
-  });
+  try {
+    const { data, error } = await supabase.rpc('create_product', {
+      product_data: params
+    });
 
-  if (error) {
-    throw new Error(`Falha ao criar produto: ${error.message}`);
+    if (error) throw error;
+
+    return await getOneById(data);
+  } catch (error) {
+    handleProductError(error, 'add');
   }
-
-  return ProductService.getOneById(data);
 }
 
 async function update(params: IProduct): Promise<IProduct> {
-  const { data, error } = await supabase.rpc('update_product', {
-    product_data: params
-  });
+  try {
+    const { data, error } = await supabase.rpc('update_product', {
+      product_data: params
+    });
 
-  if (error) {
-    throw new Error(`Falha ao atualizar produto: ${error.message}`);
+    if (error) throw error;
+
+    return await getOneById(data);
+  } catch (error) {
+    handleProductError(error, 'update');
   }
-
-  return ProductService.getOneById(data);
 }
 
 export const ProductService = {
-  getAll: getAll,
-  getOneById: getOneById,
-  add: add,
-  update: update
+  getAll,
+  getOneById,
+  add,
+  update
 };

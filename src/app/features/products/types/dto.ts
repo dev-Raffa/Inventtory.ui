@@ -31,7 +31,7 @@ export interface ProductDTO {
   stock: number;
   minimum_stock: number;
   has_variants: boolean;
-  category: { id: string; name: string };
+  categories: { id: string; name: string };
   product_attributes: { name: string; values: string }[];
   product_images: ProductImageDTO[];
   product_variants: ProductVariantDTO[];

@@ -89,8 +89,10 @@ export const productVariantsTableColumns: ColumnDef<IProductVariant>[] = [
     accessorKey: 'variation',
     header: 'Variantes',
     cell: (cell) =>
-      cell.row.original.options.map((option) => (
-        <p>{`${option.name}: ${option.value} `}</p>
+      cell.row.original.options.map((option, index) => (
+        <p
+          key={`${cell.row.original.id}-${option.name}-${index}`}
+        >{`${option.name}: ${option.value} `}</p>
       ))
   },
   {

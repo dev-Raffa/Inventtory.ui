@@ -1,9 +1,10 @@
-import { act, render, screen } from '@testing-library/react';
-import { describe, it, expect, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MemoryRouter } from 'react-router';
 import { ProductTableColumnActions } from './column-action';
 import userEvent from '@testing-library/user-event';
 
+// 1. Mocks & Polyfills (Essenciais para Radix UI no JSDOM)
 vi.mock('react-router', async (importOriginal) => {
   const mod = await importOriginal<typeof import('react-router')>();
   return {
@@ -20,6 +21,17 @@ vi.mock('react-router', async (importOriginal) => {
   };
 });
 
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock;
+window.PointerEvent = MouseEvent as typeof PointerEvent;
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.HTMLElement.prototype.hasPointerCapture = vi.fn();
+window.HTMLElement.prototype.releasePointerCapture = vi.fn();
+
 const renderComponent = (productId: string) => {
   return render(
     <MemoryRouter>
@@ -31,7 +43,11 @@ const renderComponent = (productId: string) => {
 describe('ProductTableColumnActions', () => {
   const TEST_PRODUCT_ID = 'prod-xyz-123';
 
-  it('should render the menu`s trigger button', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('should render the menu trigger button', () => {
     renderComponent(TEST_PRODUCT_ID);
 
     expect(
@@ -40,16 +56,15 @@ describe('ProductTableColumnActions', () => {
   });
 
   it('should open the menu and display all 5 action items', async () => {
+    const user = userEvent.setup();
+
     renderComponent(TEST_PRODUCT_ID);
 
     const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
-    const user = userEvent.setup();
 
-    act(() => {
-      user.click(triggerButton);
-    });
+    await user.click(triggerButton);
 
-    const menuItems = await screen.findAllByRole('menuitem', undefined);
+    const menuItems = await screen.findAllByRole('menuitem');
 
     expect(menuItems).toHaveLength(4);
     expect(screen.getByText('Detalhes')).toBeInTheDocument();
@@ -60,21 +75,22 @@ describe('ProductTableColumnActions', () => {
 
   it('should generate the "Details" and "Edit" links with the correct product ID', async () => {
     const user = userEvent.setup();
+
     renderComponent(TEST_PRODUCT_ID);
 
     const triggerButton = screen.getByRole('button', { name: /toggle menu/i });
 
-    act(() => {
-      user.click(triggerButton);
-    });
+    await user.click(triggerButton);
 
     const linkDetalhes = await screen.findByTestId('link-detalhes');
+
     expect(linkDetalhes).toHaveAttribute(
       'href',
       `/products/${TEST_PRODUCT_ID}`
     );
 
     const linkEditar = await screen.findByTestId('link-editar');
+
     expect(linkEditar).toHaveAttribute(
       'href',
       `/products/${TEST_PRODUCT_ID}/edit`

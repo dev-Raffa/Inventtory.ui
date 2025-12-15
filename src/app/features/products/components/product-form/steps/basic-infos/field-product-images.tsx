@@ -12,7 +12,7 @@ import {
   FilePickerHeader,
   FilePickerInput,
   FilePickerRemoveAllButton
-} from '@/app/components/shared/file-picker/exports';
+} from '@/app/components/shared/file-picker';
 
 import { useProductForm } from '../../hook';
 

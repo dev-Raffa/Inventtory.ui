@@ -3,7 +3,6 @@ import {
   useContext,
   useEffect,
   useReducer,
-  useRef,
   type ReactNode
 } from 'react';
 import { FormProvider, useForm, type UseFormReturn } from 'react-hook-form';
@@ -19,8 +18,8 @@ import {
 } from '../../../hooks/use-query';
 import { uploadImageToCloudinary } from '@/app/services/image-upload';
 import { useNavigate } from 'react-router';
-import { LocalStorageService } from '@/app/services/local-storage';
 import { type WizardStep } from '@/app/components/shared/wizard';
+import { useFormDraft } from '@/app/hooks/use-form-draft';
 
 type TProductFormContext = {
   form: UseFormReturn<IProduct>;
@@ -53,34 +52,32 @@ export function ProductFormProvider({
   const { mutateAsync: createMutate } = useProductCreateMutation();
   const { mutateAsync: updateMutae } = useProductUpdateMutation();
   const navigate = useNavigate();
-  const savedDraft = useRef(
-    LocalStorageService.getItem<IProduct>(LOCAL_STORAGE_KEY)
-  );
+  const { draft, clearDraft } = useFormDraft<IProduct>({
+    key: LOCAL_STORAGE_KEY
+  });
 
-  useEffect(() => {
-    if (mode !== 'Create' || (mode === 'Create' && savedDraft.current?.id)) {
-      LocalStorageService.removeItem(LOCAL_STORAGE_KEY);
-      savedDraft.current = undefined;
-    }
-  }, [product, mode]);
+  let productFormData: IProduct | undefined;
+
+  if (draft && mode === 'Create' && draft?.id === undefined) {
+    productFormData = draft;
+  } else {
+    productFormData = product;
+  }
 
   const form = useForm({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      id: product?.id ?? savedDraft.current?.id ?? '',
-      name: product?.name ?? savedDraft.current?.name ?? '',
-      description:
-        product?.description ?? savedDraft.current?.description ?? '',
-      category: product?.category ?? savedDraft.current?.category ?? {},
-      sku: product?.sku ?? savedDraft.current?.sku ?? '',
-      minimumStock:
-        product?.minimumStock ?? savedDraft.current?.minimumStock ?? 0,
-      stock: product?.stock ?? savedDraft.current?.stock ?? 0,
-      allImages: product?.allImages ?? savedDraft.current?.allImages ?? [],
-      hasVariants:
-        product?.hasVariants ?? savedDraft.current?.hasVariants ?? false,
-      attributes: product?.attributes ?? savedDraft.current?.attributes ?? [],
-      variants: product?.variants ?? savedDraft.current?.variants ?? []
+      id: productFormData?.id || '',
+      name: productFormData?.name || '',
+      description: productFormData?.description || '',
+      category: productFormData?.category || {},
+      sku: productFormData?.sku || '',
+      minimumStock: productFormData?.minimumStock || 0,
+      stock: productFormData?.stock || 0,
+      allImages: productFormData?.allImages || [],
+      hasVariants: productFormData?.hasVariants || false,
+      attributes: productFormData?.attributes || [],
+      variants: productFormData?.variants || []
     }
   });
 
@@ -97,19 +94,10 @@ export function ProductFormProvider({
 
   const watchedData = watch();
 
-  useEffect(() => {
-    const { ...serializableData } = watchedData;
-    const draft = { ...watchedData, hasVariants: undefined };
-
-    const hasValues = Object.values(draft).some((value) => {
-      return value !== undefined && value !== null && value !== '';
-    });
-
-    if (hasValues) {
-      LocalStorageService.setItem(LOCAL_STORAGE_KEY, serializableData);
-      return;
-    }
-  }, [watchedData]);
+  useFormDraft({
+    key: LOCAL_STORAGE_KEY,
+    watchData: watchedData
+  });
 
   const handleNameChange = (name: string) => {
     setValue('name', name, {
@@ -203,35 +191,32 @@ export function ProductFormProvider({
     processedImages.sort((a, b) => {
       if (a.isPrimary) return -1;
       if (b.isPrimary) return 1;
+
       return 0;
     });
 
-    if (mode === 'Create') {
-      await createMutate({
-        ...data,
-        allImages: processedImages
-      })
-        .then(() => {
-          navigate('/products');
-          clearFormData();
-        })
-        .catch(() => {
-          return;
+    try {
+      if (mode === 'Create') {
+        await createMutate({
+          ...data,
+          allImages: processedImages
         });
-    }
 
-    if (mode === 'Edit') {
-      await updateMutae({
-        ...data,
-        allImages: processedImages
-      })
-        .then(() => {
-          navigate('/products');
-          clearFormData();
-        })
-        .catch(() => {
-          return;
+        navigate('/products');
+        clearFormData();
+      }
+
+      if (mode === 'Edit') {
+        await updateMutae({
+          ...data,
+          allImages: processedImages
         });
+
+        navigate('/products');
+        clearFormData();
+      }
+    } catch {
+      return;
     }
   };
 
@@ -249,7 +234,7 @@ export function ProductFormProvider({
       variants: undefined
     });
 
-    LocalStorageService.removeItem(LOCAL_STORAGE_KEY);
+    clearDraft();
   };
 
   const onCancel = () => {

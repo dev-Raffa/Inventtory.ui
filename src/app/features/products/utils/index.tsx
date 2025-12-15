@@ -1,4 +1,5 @@
 import type { IProduct, IProductVariant } from '../types';
+import type { ProductStockStatus } from '../types/models';
 
 type TGetVariantImages = {
   allImages: IProduct['allImages'];
@@ -29,4 +30,22 @@ export function getVariantImages({
 
 export const formatVariantOptions = (options: IProductVariant['options']) => {
   return options.map((opt) => `${opt.name}: ${opt.value}`).join(' / ');
+};
+
+export const getProductStockStatus = (
+  stockValue: number,
+  minimumStock?: number
+): ProductStockStatus => {
+  if (
+    stockValue === 0 ||
+    (minimumStock !== undefined && stockValue <= minimumStock)
+  ) {
+    return 'critical';
+  }
+
+  if (minimumStock !== undefined && stockValue <= minimumStock * 1.25) {
+    return 'warning';
+  }
+
+  return 'healthy';
 };

@@ -59,7 +59,7 @@ export function ProductFormFieldCategory() {
                   aria-expanded={open}
                   className={cn(
                     'w-full justify-between border-input text-sm font-normal bg-transparent selection:bg-primary selection:text-primary-foreground',
-                    !field.value && 'text-muted-foreground '
+                    !field.value?.name && 'text-muted-foreground'
                   )}
                 >
                   {field.value?.name

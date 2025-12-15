@@ -56,12 +56,17 @@ export const variantSchema = z.object({
   images: z.array(ProductVariantImageSchema)
 });
 
+const FormCategorySchema = z.custom<z.infer<typeof CategorySchema>>(
+  (val) => CategorySchema.safeParse(val).success,
+  { message: 'Categoria é obrigatória.' }
+);
+
 export const productSchemaWithVariants = z.object({
   id: z.string().optional(),
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres.'),
   sku: z.string().min(1, 'SKU principal é obrigatório.'),
   description: z.string().optional(),
-  category: CategorySchema,
+  category: FormCategorySchema,
   minimumStock: z.number().int().default(0).optional(),
   stock: z.number().int().optional().default(0).optional(),
   hasVariants: z.literal(true),
@@ -79,7 +84,7 @@ export const productSchemaWithoutVariants = z.object({
   name: z.string().min(3, 'Nome deve ter no mínimo 3 caracteres.'),
   sku: z.string().min(1, 'SKU principal é obrigatório.'),
   description: z.string().optional(),
-  category: CategorySchema,
+  category: FormCategorySchema,
   minimumStock: z.number().int().default(0).optional(),
   stock: z.number().int().optional().default(0).optional(),
   hasVariants: z.literal(false),

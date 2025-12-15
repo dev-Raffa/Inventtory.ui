@@ -5,10 +5,11 @@ import {
   TooltipTrigger
 } from '@/app/components/ui/tooltip';
 import { CircleX, SquareCheck, TriangleAlert } from 'lucide-react';
+import { getProductStockStatus } from '../../../utils';
 
 type TProductTableColumnStock = {
   totalStock: number;
-  minimumStock?: number; // [CORREÇÃO]: minimun -> minimum
+  minimumStock?: number;
 };
 
 export function ProductTableColumnStock({
@@ -16,17 +17,16 @@ export function ProductTableColumnStock({
   minimumStock
 }: TProductTableColumnStock) {
   const getStockStatus = () => {
-    if (
-      totalStock === 0 ||
-      (minimumStock !== undefined && totalStock <= minimumStock)
-    ) {
+    const stockStatus = getProductStockStatus(totalStock, minimumStock);
+
+    if (stockStatus === 'critical') {
       return {
         icon: <CircleX className="text-red-700 h-10" />,
         label: 'Crítico'
       };
     }
 
-    if (minimumStock !== undefined && totalStock <= minimumStock * 1.25) {
+    if (stockStatus === 'warning') {
       return {
         icon: <TriangleAlert className="text-orange-400 h-10" />,
         label: 'Atenção'

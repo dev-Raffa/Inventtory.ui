@@ -1,20 +1,21 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { screen, act } from '@testing-library/react';
+import { screen, act, waitFor } from '@testing-library/react';
+import { useEffect } from 'react';
 import { mockFormData, renderWithProductProvider } from '../../mocks';
 import { ProductFormFieldImages } from './field-product-images';
+import { useProductForm } from '../../hook';
 import type { ReactNode } from 'react';
 import type { ProductFormProviderProps } from '../../hook';
 import type { IProductImage } from '@/app/features/products/types/models';
 
-const { MockFilePicker } = vi.hoisted(() => ({
-  MockFilePicker: vi.fn((props) => (
+const mocks = vi.hoisted(() => ({
+  FilePicker: vi.fn((props) => (
     <div data-testid="mock-file-picker">{props.children}</div>
   ))
 }));
 
-vi.mock('@/app/components/shared/file-picker/exports', () => ({
-  FilePicker: MockFilePicker,
-
+vi.mock('@/app/components/shared/file-picker', () => ({
+  FilePicker: mocks.FilePicker,
   FilePickerInput: () => <div data-testid="fp-input" />,
   FilePickerDrag: ({ children }: { children: ReactNode }) => (
     <div data-testid="fp-drag">{children}</div>
@@ -39,13 +40,13 @@ vi.mock('@/app/components/shared/file-picker/exports', () => ({
   FilePickerError: () => <div data-testid="fp-error" />
 }));
 
-describe('ProductFormFieldImages', () => {
+describe('ProductFormFieldImages (Integration)', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
   });
 
-  it('should render the FilePicker with the correct props and an empty state.', () => {
+  it('should render the FilePicker with the correct props and an empty state', () => {
     renderWithProductProvider(<ProductFormFieldImages />);
 
     expect(screen.getByTestId('mock-file-picker')).toBeInTheDocument();
@@ -54,7 +55,7 @@ describe('ProductFormFieldImages', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Selecionar imagens')).toBeInTheDocument();
 
-    const pastProps = MockFilePicker.mock.calls[0][0];
+    const pastProps = mocks.FilePicker.mock.calls[0][0];
 
     expect(pastProps).toEqual(
       expect.objectContaining({
@@ -67,9 +68,9 @@ describe('ProductFormFieldImages', () => {
     );
   });
 
-  it('must pass the form files (populated state) to the FilePicker.', () => {
+  it('must pass the form files (populated state) to the FilePicker', () => {
     const mockImages: IProductImage[] = [
-      { id: 'img1', name: 'image.png', src: '...', type: '' }
+      { id: 'img1', name: 'image.png', src: 'blob:url', type: 'image/png' }
     ];
     const providerProps: Partial<ProductFormProviderProps> = {
       product: { ...mockFormData, allImages: mockImages, hasVariants: false }
@@ -77,7 +78,7 @@ describe('ProductFormFieldImages', () => {
 
     renderWithProductProvider(<ProductFormFieldImages />, { providerProps });
 
-    const pastProps = MockFilePicker.mock.calls[0][0];
+    const pastProps = mocks.FilePicker.mock.calls[0][0];
 
     expect(pastProps).toEqual(
       expect.objectContaining({
@@ -90,9 +91,32 @@ describe('ProductFormFieldImages', () => {
     );
   });
 
-  it('The form should be updated when the FilePicker`s onFilesChange event is called.', () => {
+  it('should use fallback empty array if form value becomes undefined', async () => {
+    const TestComponent = () => {
+      const { form } = useProductForm();
+
+      useEffect(() => {
+        form.setValue('allImages', undefined as any);
+      }, [form]);
+
+      return <ProductFormFieldImages />;
+    };
+
+    renderWithProductProvider(<TestComponent />);
+
+    await waitFor(() => {
+      expect(mocks.FilePicker).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          files: []
+        }),
+        undefined
+      );
+    });
+  });
+
+  it('The form should be updated when the FilePicker`s onFilesChange event is called', () => {
     const { rerender } = renderWithProductProvider(<ProductFormFieldImages />);
-    const onFilesChange = MockFilePicker.mock.calls[0][0].onFilesChange;
+    const onFilesChange = mocks.FilePicker.mock.calls[0][0].onFilesChange;
     const newFiles = [{ id: 'new-img', name: 'new.png', size: 100 }];
 
     act(() => {
@@ -101,7 +125,7 @@ describe('ProductFormFieldImages', () => {
 
     rerender(<ProductFormFieldImages />);
 
-    const lastPastProps = MockFilePicker.mock.lastCall?.[0];
+    const lastPastProps = mocks.FilePicker.mock.lastCall?.[0];
 
     expect(lastPastProps).toEqual(
       expect.objectContaining({

@@ -1,102 +1,139 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { EditProductPage } from './';
-import { useParams } from 'react-router';
-import { useProductByIDQuery } from '../../hooks/use-query';
+import { EditProductPage } from './index';
+import { useParams, BrowserRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  useProductByIDQuery,
+  useProductUpdateMutation,
+  useProductCreateMutation
+} from '../../hooks/use-query';
+import {
+  useCategoriesQuery,
+  useCreateCategoryMutation
+} from '../../../category/hooks/use-query';
 
-const { MockProductForm, MockProductFormProvider } = vi.hoisted(() => ({
-  MockProductForm: vi.fn(() => <div data-testid="mock-product-form" />),
-  MockProductFormProvider: vi.fn((props) => (
-    <div
-      data-testid="mock-provider"
-      data-mode={props.mode}
-      data-product-name={props.product?.name}
-    >
-      {props.children}
-    </div>
-  ))
-}));
+vi.mock('react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router')>();
+  return {
+    ...actual,
+    useParams: vi.fn()
+  };
+});
 
-vi.mock('react-router', () => ({
-  useParams: vi.fn()
-}));
+vi.mock('../../hooks/use-query');
+vi.mock('../../../category/hooks/use-query');
+vi.mock('@/app/services/image-upload');
 
-vi.mock('../../hooks/use-query', () => ({
-  useProductByIDQuery: vi.fn()
-}));
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock;
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.PointerEvent = MouseEvent as typeof PointerEvent;
 
-vi.mock('../../components/product-form', () => ({
-  ProductForm: MockProductForm
-}));
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } }
+});
 
-vi.mock('../../components/product-form/hook', () => ({
-  ProductFormProvider: MockProductFormProvider
-}));
+const renderComponent = () => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <EditProductPage />
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
-describe('EditProductPage', () => {
-  const mockUseParams = vi.mocked(useParams);
-  const mockUseQuery = vi.mocked(useProductByIDQuery);
+describe('EditProductPage (Integration)', () => {
+  const mockProduct = {
+    id: 'p123',
+    name: 'Caneta Luxo',
+    sku: 'PEN-LUX-01',
+    description: 'Caneta esferográfica dourada',
+    stock: 100,
+    minimumStock: 10,
+    hasVariants: false,
+    category: { id: 'cat1', name: 'Escritório' },
+    attributes: [],
+    variants: [],
+    allImages: []
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.clear();
 
-    mockUseQuery.mockReturnValue({
+    vi.mocked(useProductByIDQuery).mockReturnValue({
       data: undefined,
+      isLoading: true,
+      isError: false,
+      error: null
+    } as any);
+
+    vi.mocked(useCategoriesQuery).mockReturnValue({
+      data: [{ id: 'cat1', name: 'Escritório' }],
       isLoading: false,
       isError: false
     } as any);
-  });
 
-  it('should render null if the productID or data is not loaded', () => {
-    mockUseParams.mockReturnValue({ productId: undefined });
-
-    render(<EditProductPage />);
-
-    expect(screen.queryByTestId('mock-provider')).toBeNull();
-
-    mockUseParams.mockReturnValue({ productId: 'p1' });
-    mockUseQuery.mockReturnValue({ data: undefined, isLoading: true } as any);
-
-    render(<EditProductPage />);
-
-    expect(screen.queryByTestId('mock-provider')).toBeNull();
-
-    expect(mockUseQuery).toHaveBeenCalledWith('p1');
-  });
-
-  it('The form should be rendered in "Edit" mode with the product data and dynamic label', () => {
-    const mockProduct = {
-      id: 'p123',
-      name: 'Caneta Esferográfica',
-      otherData: '...'
-    };
-
-    mockUseParams.mockReturnValue({ productId: 'p123' });
-    mockUseQuery.mockReturnValue({
-      data: mockProduct,
-      isLoading: false
+    vi.mocked(useProductUpdateMutation).mockReturnValue({
+      mutateAsync: vi.fn()
     } as any);
 
-    render(<EditProductPage />);
+    vi.mocked(useProductCreateMutation).mockReturnValue({
+      mutateAsync: vi.fn()
+    } as any);
+
+    vi.mocked(useCreateCategoryMutation).mockReturnValue({
+      mutateAsync: vi.fn()
+    } as any);
+  });
+
+  it('should render loading state initially or null if ID is missing', () => {
+    vi.mocked(useParams).mockReturnValue({ productId: undefined });
+
+    const { container } = renderComponent();
+
+    expect(container.firstChild).toBeNull();
+  });
+
+  it('should populate the real form with product data fetched by ID', async () => {
+    vi.mocked(useParams).mockReturnValue({ productId: 'p123' });
+
+    vi.mocked(useProductByIDQuery).mockReturnValue({
+      data: mockProduct,
+      isLoading: false,
+      isError: false
+    } as any);
+
+    renderComponent();
 
     expect(
-      screen.getByRole('heading', { name: 'Produtos', level: 1 })
+      screen.getByRole('heading', { name: /Produtos/i })
     ).toBeInTheDocument();
 
-    expect(MockProductFormProvider).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mode: 'Edit',
-        product: mockProduct
-      }),
-      undefined
-    );
+    expect(screen.getByText('Editar produto: Caneta Luxo')).toBeInTheDocument();
 
-    expect(MockProductForm).toHaveBeenCalledWith(
-      expect.objectContaining({
-        label: 'Editar produto: Caneta Esferográfica'
-      }),
-      undefined
-    );
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('Caneta Luxo')).toBeInTheDocument();
+      expect(screen.getByDisplayValue('PEN-LUX-01')).toBeInTheDocument();
+    });
+  });
+
+  it('should display graceful handling (empty state) when product is not found', () => {
+    vi.mocked(useParams).mockReturnValue({ productId: 'p999' });
+
+    vi.mocked(useProductByIDQuery).mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      isError: true
+    } as any);
+
+    const { container } = renderComponent();
+
+    expect(container.firstChild).toBeNull();
   });
 });

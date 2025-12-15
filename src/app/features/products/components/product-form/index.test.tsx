@@ -1,108 +1,143 @@
-import { screen, render, fireEvent } from '@testing-library/react';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { ProductForm } from './index';
+import { ProductFormProvider } from './hook';
+import { BrowserRouter } from 'react-router';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import {
+  useProductCreateMutation,
+  useProductUpdateMutation
+} from '../../hooks/use-query';
+import {
+  useCategoriesQuery,
+  useCreateCategoryMutation
+} from '../../../category/hooks/use-query';
 
-const { mockUseProductForm } = vi.hoisted(() => {
-  return {
-    mockUseProductForm: vi.fn()
-  };
+vi.mock('../../hooks/use-query');
+vi.mock('../../../category/hooks/use-query');
+vi.mock('@/app/services/image-upload');
+
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+globalThis.ResizeObserver = ResizeObserverMock;
+window.HTMLElement.prototype.scrollIntoView = vi.fn();
+window.PointerEvent = MouseEvent as typeof PointerEvent;
+
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } }
 });
 
-vi.mock('./hook', () => ({
-  useProductForm: mockUseProductForm
-}));
+const renderComponent = (mode: 'Create' | 'Edit' = 'Create') => {
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ProductFormProvider mode={mode}>
+          <ProductForm
+            label={mode === 'Create' ? 'Novo Produto' : 'Editar Produto'}
+          />
+        </ProductFormProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+};
 
-vi.mock('@/app/components/shared/wizard', () => ({
-  Wizard: ({ children, steps, onCancel, onBeforeNextStep }: any) => (
-    <div data-testid="wizard-root">
-      <div data-testid="steps-count">{steps?.length}</div>
-      <button data-testid="wizard-cancel-btn" onClick={onCancel}>
-        Cancel Trigger
-      </button>
-      <button data-testid="wizard-next-btn" onClick={onBeforeNextStep}>
-        Next Trigger
-      </button>
-      {children}
-    </div>
-  ),
-  WizardHeader: ({ label }: any) => (
-    <div data-testid="wizard-header">{label}</div>
-  ),
-  WizardContent: () => <div data-testid="wizard-content">Content</div>,
-  WizardControl: () => <div data-testid="wizard-control">Controls</div>
-}));
-
-describe('ProductForm', () => {
-  const mockOnSubmit = vi.fn();
-  const mockOnCancel = vi.fn();
-  const mockHandleNextStep = vi.fn();
-  const mockSteps = [
-    { id: '1', label: 'Step 1', component: <div /> },
-    { id: '2', label: 'Step 2', component: <div /> }
-  ];
-
-  const mockForm = {
-    handleSubmit: (fn: any) => (e: any) => {
-      e?.preventDefault();
-      fn();
-    }
-  };
-
+describe('ProductForm UI Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUseProductForm.mockReturnValue({
-      form: mockForm,
-      steps: mockSteps,
-      onSubmit: mockOnSubmit,
-      onCancel: mockOnCancel,
-      handleNextStep: mockHandleNextStep
+
+    vi.mocked(useProductCreateMutation).mockReturnValue({
+      mutateAsync: vi.fn()
+    } as any);
+
+    vi.mocked(useProductUpdateMutation).mockReturnValue({
+      mutateAsync: vi.fn()
+    } as any);
+
+    vi.mocked(useCategoriesQuery).mockReturnValue({
+      data: [{ id: 'cat-1', name: 'Categoria Teste' }],
+      isLoading: false,
+      isError: false,
+      error: null
+    } as any);
+
+    vi.mocked(useCreateCategoryMutation).mockReturnValue({
+      mutateAsync: vi.fn()
+    } as any);
+  });
+
+  it('should render the form with initial state', () => {
+    renderComponent('Create');
+
+    expect(screen.getByText('Novo Produto')).toBeInTheDocument();
+
+    expect(screen.getByText('Informações Básicas')).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', { name: /Avançar/i })
+    ).toBeInTheDocument();
+
+    expect(
+      screen.getByRole('button', { name: /Cancelar/i })
+    ).toBeInTheDocument();
+  });
+
+  it('should navigate to "Atributos" step when "Has Variants" is toggled and valid data is filled', async () => {
+    const user = userEvent.setup();
+
+    renderComponent('Create');
+
+    const variantSwitch = screen.getByRole('switch', {
+      name: /Este produto possui variações/i
     });
-  });
 
-  it('should render the form structure and Wizard components', () => {
-    render(<ProductForm label="Criar Produto" />);
-
-    const form = document.querySelector('form');
-
-    expect(form).toBeInTheDocument();
-    expect(screen.getByTestId('wizard-root')).toBeInTheDocument();
-    expect(screen.getByTestId('wizard-header')).toHaveTextContent(
-      'Criar Produto'
+    await user.click(variantSwitch);
+    await user.type(
+      screen.getByLabelText(/Nome do Produto/i),
+      'Produto Com Variantes'
     );
-    expect(screen.getByTestId('wizard-content')).toBeInTheDocument();
-    expect(screen.getByTestId('wizard-control')).toBeInTheDocument();
+
+    const categoryTrigger = screen.getByRole('combobox', {
+      name: /Categoria/i
+    });
+
+    await user.click(categoryTrigger);
+
+    const categoryOption = await screen.findByText('Categoria Teste');
+
+    await user.click(categoryOption);
+
+    const nextButton = screen.getByRole('button', { name: /Avançar/i });
+
+    await user.click(nextButton);
+
+    expect(await screen.findByText('Atributos')).toBeInTheDocument();
   });
 
-  it('should pass the correct props to the Wizard', () => {
-    render(<ProductForm label="Criar Produto" />);
+  it('should render correctly in Edit mode', () => {
+    renderComponent('Edit');
 
-    expect(screen.getByTestId('steps-count')).toHaveTextContent('2');
+    expect(screen.getByText('Editar Produto')).toBeInTheDocument();
   });
 
-  it('should call onCancel when the Wizard triggers cancel', () => {
-    render(<ProductForm label="Criar Produto" />);
+  it('should show validation errors when attempting to proceed with empty required fields', async () => {
+    const user = userEvent.setup();
 
-    const cancelBtn = screen.getByTestId('wizard-cancel-btn');
-    fireEvent.click(cancelBtn);
+    renderComponent('Create');
 
-    expect(mockOnCancel).toHaveBeenCalledTimes(1);
-  });
+    const nextButton = screen.getByRole('button', { name: /Avançar/i });
 
-  it('should call handleNextStep when the Wizard triggers next step validation', () => {
-    render(<ProductForm label="Criar Produto" />);
+    await user.click(nextButton);
 
-    const nextBtn = screen.getByTestId('wizard-next-btn');
-    fireEvent.click(nextBtn);
+    expect(
+      await screen.findByText('Nome deve ter no mínimo 3 caracteres.')
+    ).toBeInTheDocument();
 
-    expect(mockHandleNextStep).toHaveBeenCalledTimes(1);
-  });
-
-  it.skip('should call onSubmit when the form is submitted', () => {
-    render(<ProductForm label="Criar Produto" />);
-
-    const form = document.querySelector('form');
-    fireEvent.submit(form!);
-
-    expect(mockOnSubmit).toHaveBeenCalledTimes(1);
+    expect(
+      await screen.findByText('Categoria é obrigatória.')
+    ).toBeInTheDocument();
   });
 });
