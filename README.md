@@ -1,134 +1,193 @@
-# Inventto - Gestor de Estoque (Frontend)
+# 🧱 Inventto — Sistema de Gestão de Estoque (Fase 1)
 
-Inventto é um sistema web moderno para gestão de inventário e controle de estoque, focado em pequenas e médias empresas (PMEs). O objetivo é fornecer uma ferramenta visual, rápida e inteligente para substituir o controle manual em planilhas, dando ao gestor total visibilidade sobre seu capital de inventário.
+**Foco:** Integridade de Dados, Rastreabilidade e Arquitetura de Software
 
-Este repositório contém o frontend da aplicação, desenvolvido com React e TypeScript, seguindo uma arquitetura modular e escalável.
+Este repositório representa a **Fase 1** do *Inventto*, um sistema de gestão de estoque projetado para lidar com **domínios complexos**, como produtos com variantes, histórico de movimentações e isolamento multi-tenant.
 
-## Funcionalidades da Fase 1
+O projeto foi publicado como **projeto de portfólio**, com o objetivo de demonstrar **decisões arquiteturais**, **modelagem de domínio** e **preocupação real com integridade e segurança dos dados**.
 
-- Gestão de Produtos com Variações (Grades)
-- Controle de Movimentações de Estoque (Entrada, Saída, Ajuste)
-- Histórico de Movimentações (Audit Trail)
-- Alertas de Estoque Mínimo
-- Dashboard com KPIs e Relatórios
 
-## Stack Tecnológica
+## 📌 Por que este projeto existe?
 
-Esta stack foi escolhida para balancear agilidade de desenvolvimento com estrutura e manutenibilidade a longo prazo, evitando overengineering.
+Na prática, muitos sistemas de estoque falham silenciosamente por erros conceituais:
 
-| Categoria | Biblioteca | Propósito |
-| :--- | :--- | :--- |
-| **Core** | [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) | Fundação da UI e build tool de alta performance. |
-| **Linguagem** | [TypeScript](https://www.typescriptlang.org/) | Tipagem estática para segurança e manutenibilidade. |
-| **Roteamento** | [React Router](https://reactrouter.com/) | Padrão da indústria para roteamento SPA. |
-| **Estado (Servidor)** | [TanStack Query](https://tanstack.com/query) | Gerenciamento de dados da API, cache, revalidação e paginação. |
-| **Estado (Cliente)** | [Zustand](https://zustand-demo.pmnd.rs/) | Gerenciamento de estado global simples e leve. |
-| **Cliente HTTP** | [Axios](https://axios-http.com/) | Criação de instâncias de API e interceptors (ex: JWT). |
-| **Formulários** | [React Hook Form](https://react-hook-form.com/) | Gerenciamento de formulários complexos com performance. |
-| **Validação** | [Zod](https://zod.dev/) | Validação de schemas (formulários e APIs) com inferência de tipos. |
-| **UI & Estilização** | [Tailwind CSS](https://tailwindcss.com/) | Utility-first CSS para desenvolvimento ágil de UIs customizadas. |
-| **Componentes** | [Shadcn/ui](https://ui.shadcn.com/) | "Copie e cole" componentes acessíveis e estilizados com Tailwind. |
-| **Testes** | [Vitest](https://vitest.dev/) + [RTL](https://testing-library.com/) | Testes unitários e de integração rápidos e co-localizados. |
-| **Qualidade** | [ESLint](https://eslint.org/) + [Prettier](https://prettier.io/) + [Husky](https://typicode.github.io/husky/) | Padronização e qualidade de código. |
+❌ Estoque tratado como um número editável
 
-## Arquitetura do Projeto
+❌ Ausência de auditoria (quem alterou, quando e por quê)
 
-O projeto segue uma arquitetura orientada a features (feature-based). Em vez de organizar o código por tipo de arquivo (ex: /components, /hooks, /pages), nós o organizamos por domínio de negócio.
+❌ Regras de negócio vazando para o frontend
 
-Isso torna o projeto mais modular, fácil de navegar e de dar manutenção.
+❌ Dificuldade para lidar com produtos com variantes (grades)
+
+
+
+O Inventto foi projetado com uma abordagem **Defense-First**, assumindo desde o início que:
+
+* **Integridade:** o estoque nunca é editado diretamente
+* **Rastreabilidade:** o estoque atual é uma projeção do histórico
+* **Segurança:** o frontend é tratado como um cliente não confiável
+* **Complexidade:** variantes são tratadas como parte central do domínio
+
+
+## 🏗️ Visão Geral da Arquitetura
+
+A arquitetura segue o princípio de que **regras críticas vivem o mais próximo possível dos dados**.
 
 ```
-|-- /cypress/              # Testes End-to-End (E2E) (se aplicável)
-|-- /src/
-|   |-- /assets/           # Imagens, fontes, SVGs estáticos.
-|   |-- /lib/              # Configuração de libs (tailwind, zod, etc.).
-|   |-- /app/
-|   |   |-- /api/              # Configuração global do Axios, instâncias e interceptors.
-|   |   |-- /components/       # Componentes de UI 100% genéricos (Button,      Modal, Input).
-|   |   |-- /config/           # Constantes e configuração de .env.
-|   |   |-- /hooks/            # Hooks customizados genéricos (ex: useDebounce).
-|   |   |-- /providers/        # Provedores React (Auth, QueryClient, Router).
-|   |   |-- /routes/           # Configuração central das rotas (Rotas públicas e privadas).
-|   |   |-- /store/            # Stores globais do Zustand (ex: useAuthStore).
-|   |   |-- /features/         # <-- CORAÇÃO DA ARQUITETURA
-|   |   |   |-- /auth/         # Domínio: Autenticação
-|   |   |   |   |-- /components/ # Componentes específicos de Auth (LoginForm)
-|   |   |   |   |-- /pages/      # Telas (LoginPage, RegisterPage)
-|   |   |   |   |-- /api/        # Chamadas de API (authApi.ts)
-|   |   |   |   |-- /hooks/      # Hooks (useAuth.ts)
-|   |   |   |   |-- types.ts     # Tipos TypeScript do domínio
-|   |   |   |-- /products/     # Domínio: Produtos
-|   |   |   |   |-- /components/ # ProductList, ProductForm, Stepper, SummaryCard
-|   |   |   |   |-- /pages/      # ProductListPage, ProductCreatePage
-|   |   |   |   |-- /api/        # productsApi.ts
-|   |   |   |   |-- /hooks/      # useProducts.ts (contém a lógica do TanStack Query)
-|   |   |   |   |-- types.ts
-|   |   |   |-- /inventory/    # Domínio: Estoque
-|   |   |   |   |-- /components/ # StockMovementForm, HistoryTable
-|   |   |   |   |-- ...etc
-|   |   |   |-- /dashboard/    # Domínio: Dashboard
-|   |   |   |   |-- /components/ # KpiCard, RecentAlertsWidget
-|   |   |   |   |-- /pages/      # DashboardPage
-|   |-- App.tsx            # Ponto de entrada principal com Provedores e Rotas
-|   |-- main.tsx           # Renderização do app
-|-- .eslintrc.cjs
-|-- .prettierrc
-|-- package.json
-|-- tsconfig.json
-|-- vite.config.ts         # Configuração do Vite e Vitest
+Usuário
+  ↓
+Frontend (React / Vite)
+  ↓
+Edge Functions (Orquestração)
+  ↓
+PostgreSQL (Camada de Integridade)
+   ├─ Validação de Regras de Domínio
+   ├─ Transações Atômicas
+   ├─ Registro de Movimentações
+   └─ Projeção do Estoque Atual
 ```
 
-## 🏛️ Anatomia dos Componentes
-
-Para manter o projeto organizado e desacoplado, os componentes são divididos em três níveis hierárquicos. Essa estrutura ajuda-nos a entender o nível de responsabilidade de cada componente.
-
-1. Componentes de UI (src/app/components/ui)
-
-- **Propósito**: "Primitivos" de UI, 100% reutilizáveis e "burros" (dumb).
-
-- **Origem**: São os componentes base fornecidos pelo shadcn/ui (ex: Button.tsx, Card.tsx, Input.tsx).
-
-- **Regras**:
-    - NÃO devem conter lógica de negócio (ex: hooks do TanStack Query).
-    - NÃO devem importar nada de /features/.
-    - Apenas recebem props e exibem UI.
-
-2. Componentes Compartilhados (src/app/components/shared)
-
-- **Propósito**: Componentes "inteligentes" ou de layout específicos da aplicação, mas que são reutilizados por múltiplas features.
-
-- **Exemplos no Projeto**:
-    - Logo: Usado no AuthLayout e SystemLayoutHeader.
-    - DataTable: O sistema de tabela reutilizável.
-    - FilePicker: O componente de upload de arquivos.
-
-- **Regras**:
-    - PODEM importar e compor componentes de /ui/.
-    - NÃO devem importar nada de /features/.
-
-3. Componentes de Feature (src/app/features/[nome-da-feature]/components)
-
-- **Propósito**: O coração da aplicação. São componentes com lógica de negócio e contexto de domínio.
-
-- **Exemplos no Projeto**:
-    - ProductListTable: Sabe sobre "Produtos".
-    - ProductForm: Contém toda a lógica do formulário de criação/edição.
-    - ProductImageCarousel: Um carrossel que entende a estrutura IProductImage.
-
-- **Regras**:
-    - PODEM (e devem) importar de /ui/ e /shared/.
-    - PODEM (e devem) usar os hooks da sua própria feature (ex: useProductsQuery).
-    - NÃO devem ser importados por um componente de outra feature (ex: um componente de inventory não deve importar ProductListTable).
-
-## Testes
-
-Nossa estratégia de testes se baseia em co-localização (colocation) para testes unitários e de integração.
-
-- **Testes Unitários / Integração (Vitest + RTL):** Os arquivos de teste (ex: ProductList.test.tsx) ficam dentro da pasta da feature, ao lado do componente que estão testando. Isso facilita a manutenção e garante que os testes sejam parte integrante do desenvolvimento da feature.
-
-- **Testes End-to-End (Cypress/Playwright):** Ficam na pasta /cypress na raiz do projeto, pois testam a aplicação como um todo.
+> O frontend orquestra fluxos e UX.
+> O banco de dados garante a verdade do sistema.
 
 
-## Licença
+## 🧠 Decisões de Domínio (Highlights)
 
-Este projeto é licenciado sob a Licença MIT.
+### 1. Estoque é uma Consequência, não um Input
+
+Nenhum usuário pode “editar” o estoque diretamente.
+
+**Regra fundamental:**
+
+```
+Estoque Atual =
+Σ Entradas − Σ Saídas + Σ Ajustes
+```
+
+**Benefícios:**
+
+* Auditoria confiável
+* Histórico imutável
+* Impossibilidade de alteração sem rastreabilidade
+
+
+### 2. Variantes como Cidadãos de Primeira Classe
+
+Produtos com variantes **não são tratados como exceção**.
+
+* Cada variante possui ciclo de vida próprio
+* Atributos armazenados em `JSONB` para flexibilidade
+* SKUs individuais para cada combinação válida
+
+Isso evita:
+
+* Lógica condicional espalhada
+* Explosão de colunas na tabela principal
+* Modelagens frágeis e difíceis de evoluir
+
+
+### 3. Error Handler Global e Determinístico
+
+Em vez de tratar erros de forma pontual (`console.log(err)`), o projeto utiliza uma **estratégia centralizada de tratamento de erros**.
+
+**Fluxo de tratamento:**
+
+* 🛑 **Interceptação:** erros capturados na camada de service
+* ⚙️ **Tradução:** códigos técnicos do PostgreSQL (ex: `23505`, `PGRST116`) são convertidos em mensagens de negócio
+* 🌐 **Centralização:** o `QueryClient` gerencia o feedback global
+* 🔔 **UI:** mensagens padronizadas são exibidas ao usuário
+
+Essa abordagem melhora:
+
+* Experiência de desenvolvimento
+* Previsibilidade da UI
+* Manutenção do código
+
+
+
+## 🎯 Escopo da Fase 1
+
+### ✅ Incluído
+
+* Cadastro de produtos simples e com variantes
+* Modelagem dinâmica de atributos
+* Movimentações de estoque transacionais
+* Histórico de movimentações imutável (audit trail)
+* Suporte multi-tenant com isolamento via RLS
+
+### 🚫 Excluído (intencionalmente)
+
+* Preços e cálculos financeiros
+* Pedidos e vendas
+* Relatórios e dashboards
+* Gestão de fornecedores
+
+> O foco desta fase é **integridade do estoque**, não funcionalidades comerciais.
+
+
+## 🗄️ Backend e Segurança (Supabase)
+
+O PostgreSQL é utilizado como **núcleo do domínio**, não apenas como repositório de dados.
+
+* **Row Level Security (RLS):** isolamento forçado entre organizações
+* **Security Definer:** funções críticas executam regras sensíveis com segurança
+* **Multi-Tenancy:** todas as entidades principais possuem `organization_id`
+
+Mesmo que o frontend falhe, o banco **impede estados inválidos**.
+
+
+## ⚖️ Trade-offs Arquiteturais
+
+Decisões conscientes tomadas durante o desenvolvimento:
+
+| Decisão                    | Trade-off (Custo)                   | Benefício (Ganho)                             |
+| -------------------------- | ----------------------------------- | --------------------------------------------- |
+| Regras no banco (PL/pgSQL) | Maior complexidade de versionamento | Integridade garantida independente do client  |
+| Variantes em JSONB         | Queries analíticas mais complexas   | Flexibilidade total sem migrations constantes |
+| Frontend como orquestrador | Menos otimizações locais            | Fonte única da verdade e previsibilidade      |
+
+
+## 🚧 Limitações Conhecidas
+
+Como todo software real, existem limitações conhecidas:
+
+* Ausência de lock pessimista para cenários altamente concorrentes
+* Event Sourcing parcial (histórico transacional)
+* Algumas garantias de imutabilidade ainda dependem da aplicação
+
+Essas limitações são **conhecidas, documentadas e intencionais** nesta fase.
+
+
+## 🔮 Possíveis Evoluções
+
+* Lock transacional para movimentações de estoque
+* Triggers para impedir alterações em dados históricos
+* Importação e exportação via CSV
+* Views materializadas para relatórios
+* Separação clara entre leitura e escrita (CQRS)
+
+
+## 🛠️ Stack Tecnológica
+
+* **Frontend:** React, Vite, TypeScript, TailwindCSS, shadcn/ui
+* **State Management:** TanStack Query (Server State)
+* **Backend:** Supabase (PostgreSQL, Auth, Edge Functions)
+* **Qualidade:** ESLint, Prettier, Husky, Vitest
+
+
+## 📬 Contato
+
+**Rafael da Conceição**
+Desenvolvedor Web Full Stack
+
+📧 [raffa.d3v@gmail.com](mailto:raffa.d3v@gmail.com)
+
+🔗 [https://github.com/dev-Raffa](https://github.com/dev-Raffa)
+
+
+### Consideração final
+
+Este projeto **não busca ser um produto pronto**, mas sim demonstrar **capacidade de decisão técnica**, **entendimento de domínio** e **preocupação com integridade de sistemas reais**.
+
+Ele representa uma fase fechada do projeto.
+O desenvolvimento comercial continua em um repositório privado.
