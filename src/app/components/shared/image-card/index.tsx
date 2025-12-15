@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { ImageIcon, ImageOff } from 'lucide-react'; // Novo ícone para erro
+import { ImageIcon, ImageOff } from 'lucide-react';
 import { Skeleton } from '../../ui/skeleton';
 
 type TImageCard = {

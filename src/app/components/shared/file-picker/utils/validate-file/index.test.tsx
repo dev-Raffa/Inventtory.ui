@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { validateFile } from './'; // Ajuste o caminho
+import { validateFile } from './';
 
 const { mockFormatBytes } = vi.hoisted(() => {
   const mockFormatBytes = vi.fn((size) => `${size / 1024} KB`);

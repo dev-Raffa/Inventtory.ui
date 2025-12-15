@@ -1,14 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  afterEach,
+  type MockInstance
+} from 'vitest';
 import { LocalStorageService } from './';
 
 describe('LocalStorageService', () => {
+  let consoleErrorSpy: MockInstance;
+
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
+
+    consoleErrorSpy = vi.spyOn(console, 'error');
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    consoleErrorSpy.mockRestore();
   });
 
   describe('setItem', () => {
@@ -34,7 +46,9 @@ describe('LocalStorageService', () => {
       expect(setItemSpy).toHaveBeenCalledWith(key, expectedSerializedValue);
     });
 
-    it(' should log an error if JSON.stringify fails (e.g., circular object).', () => {
+    it('should log an error if JSON.stringify fails (e.g., circular object)', () => {
+      consoleErrorSpy.mockImplementation(() => {});
+
       const setItemSpy = vi.spyOn(localStorage, 'setItem');
       const key = 'circular';
 
@@ -44,11 +58,12 @@ describe('LocalStorageService', () => {
       LocalStorageService.setItem(key, circularObject);
 
       expect(setItemSpy).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
     });
   });
 
   describe('getItem', () => {
-    it(' should return a deserialized object from localStorage.', () => {
+    it('should return a deserialized object from localStorage', () => {
       const getItemSpy = vi.spyOn(localStorage, 'getItem');
       const key = 'user';
       const value = { id: 1, name: 'John Doe' };
@@ -61,7 +76,7 @@ describe('LocalStorageService', () => {
       expect(result).toEqual(value);
     });
 
-    it('should return "undefined" if the key does not exist.', () => {
+    it('should return "undefined" if the key does not exist', () => {
       const getItemSpy = vi.spyOn(localStorage, 'getItem');
       const key = 'non-existent-key';
 
@@ -71,7 +86,9 @@ describe('LocalStorageService', () => {
       expect(result).toBeUndefined();
     });
 
-    it('It should log an error and return "undefined" if JSON.parse fails (malformed JSON).', () => {
+    it('It should log an error and return "undefined" if JSON.parse fails (malformed JSON)', () => {
+      consoleErrorSpy.mockImplementation(() => {});
+
       const getItemSpy = vi.spyOn(localStorage, 'getItem');
       const key = 'bad-json';
 
@@ -81,11 +98,12 @@ describe('LocalStorageService', () => {
 
       expect(getItemSpy).toHaveBeenCalledWith(key);
       expect(result).toBeUndefined();
+      expect(consoleErrorSpy).toHaveBeenCalled();
     });
   });
 
   describe('removeItem', () => {
-    it('must call localStorage.removeItem with the correct key.', () => {
+    it('must call localStorage.removeItem with the correct key', () => {
       const removeItemSpy = vi.spyOn(localStorage, 'removeItem');
       const key = 'user-to-remove';
 
@@ -96,7 +114,7 @@ describe('LocalStorageService', () => {
   });
 
   describe('clear', () => {
-    it('should call localStorage.clear.', () => {
+    it('should call localStorage.clear', () => {
       const clearSpy = vi.spyOn(localStorage, 'clear');
 
       LocalStorageService.clear();

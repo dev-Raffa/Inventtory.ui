@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { MovementService } from './index';
 import type { MovementDTO } from '../types/dto';
 import type { Movement } from '../types/model';
@@ -46,8 +46,14 @@ vi.mock('@/app/config/supabase', () => ({
 }));
 
 describe('MovementService', () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockReset();
   });
 
   describe('getAll', () => {
@@ -94,6 +100,7 @@ describe('MovementService', () => {
     });
 
     it('should throw handled error when fetch fails', async () => {
+      consoleErrorSpy.mockImplementation(() => {});
       mockOverrideTypes.mockResolvedValue({
         data: null,
         error: { message: 'DB Error', code: 'PGRST000' }
@@ -131,6 +138,7 @@ describe('MovementService', () => {
     });
 
     it('should throw handled error when RPC fails', async () => {
+      consoleErrorSpy.mockImplementation(() => {});
       mockRpc.mockResolvedValue({
         data: null,
         error: { message: 'RPC Error', code: 'P0001' }

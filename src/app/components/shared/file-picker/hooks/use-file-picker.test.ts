@@ -79,8 +79,9 @@ describe('useFilePicker', () => {
     });
 
     it('should call clearFiles and replace array when "multiple" is false', () => {
-      //@ts-expect-error mockFileA
-      const { result } = renderMultiHook([mockFileA], { multiple: false });
+      const { result } = renderMultiHook([mockFileA] as never[], {
+        multiple: false
+      });
       const { addFiles } = result.current[1];
 
       mockProcessNewFiles.mockReturnValue({
@@ -96,8 +97,9 @@ describe('useFilePicker', () => {
     });
 
     it('should concatenate files when "multiple" is true', () => {
-      //@ts-expect-error mockFileA
-      const { result } = renderMultiHook([mockFileA], { multiple: true });
+      const { result } = renderMultiHook([mockFileA] as never[], {
+        multiple: true
+      });
       const { addFiles } = result.current[1];
 
       mockProcessNewFiles.mockReturnValue({
@@ -115,8 +117,7 @@ describe('useFilePicker', () => {
     it('should set error and NOT call onFilesChange if maxFiles limit is exceeded', () => {
       const initialFiles = [mockFileA, mockFileB, mockFileA, mockFileB];
 
-      //@ts-expect-error initialFiles
-      const { result } = renderMultiHook(initialFiles, {
+      const { result } = renderMultiHook(initialFiles as never[], {
         maxFiles: 5,
         multiple: true
       });
@@ -153,8 +154,7 @@ describe('useFilePicker', () => {
 
   describe('removeFile (Revocation & Primary Rollover)', () => {
     it('should remove file and revokeObjectURL for existing blob URLs', () => {
-      //@ts-expect-error mockFileA
-      const { result } = renderMultiHook([mockFileA, mockFileB]);
+      const { result } = renderMultiHook([mockFileA, mockFileB] as never[]);
       const { removeFile } = result.current[1];
       const expectedRolloverFiles = [{ ...mockFileB, isPrimary: true }];
 
@@ -167,16 +167,15 @@ describe('useFilePicker', () => {
     });
 
     it('should assign isPrimary to the next file if the primary file is removed', () => {
-      //@ts-expect-error mockFileA
-      const { result } = renderMultiHook([mockFileA, mockFileB]);
+      const { result } = renderMultiHook([mockFileA, mockFileB] as never[]);
       const { removeFile } = result.current[1];
 
       act(() => {
         removeFile('a');
       });
 
-      // Assert: Arquivo B deve ser o novo primário
       const expectedNewFiles = [{ ...mockFileB, isPrimary: true }];
+
       expect(mockOnFilesChange).toHaveBeenCalledWith(expectedNewFiles);
     });
 
@@ -184,8 +183,7 @@ describe('useFilePicker', () => {
       const mockFileCPrimary = { ...mockFileC, isPrimary: true };
       const initialFiles = [mockFileA, mockFileB, mockFileCPrimary];
 
-      //@ts-expect-error mockFileA
-      const { result } = renderMultiHook(initialFiles);
+      const { result } = renderMultiHook(initialFiles as never[]);
 
       const { removeFile } = result.current[1];
 

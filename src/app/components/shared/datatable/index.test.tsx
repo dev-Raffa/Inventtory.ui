@@ -95,18 +95,14 @@ const IntegrationTable = ({
       }
     }}
   >
-    <div className="space-y-4">
-      <div className="flex gap-2">
-        <DataTableTextFilter placeholder="Buscar Geral..." />
-        <DataTableTextFilter placeholder="Filtrar Nome..." column="name" />
-      </div>
-      <div className="flex justify-end">
-        <DataTableDropdownColumnsVisibility />
-      </div>
+    <DataTableTextFilter placeholder="Buscar Geral..." />
+    <DataTableTextFilter placeholder="Filtrar Nome..." column="name" />
+    <DataTableDropdownColumnsVisibility />
+    <table>
       <DataTableHeader />
       <DataTableBody />
-      <PaginationControllers />
-    </div>
+    </table>
+    <PaginationControllers />
   </DataTable>
 );
 

@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { vi, describe, it, expect } from 'vitest';
-import { useFilePickerContext, FilePickerContext } from './'; // Ajuste o caminho
+import { useFilePickerContext, FilePickerContext } from './';
 
 const mockContextValue = [
   { errors: ['erro teste'], files: [{ id: 'a', name: 'a.jpg' }] },

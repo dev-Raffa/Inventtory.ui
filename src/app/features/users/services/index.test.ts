@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { UserService } from './index';
 import type { UserProfileDTO } from '../types';
 
@@ -51,8 +51,14 @@ vi.mock('@/app/config/supabase', () => ({
 }));
 
 describe('UserService', () => {
+  const consoleErrorSpy = vi.spyOn(console, 'error');
+
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    consoleErrorSpy.mockReset();
   });
 
   describe('getProfile', () => {
@@ -109,6 +115,7 @@ describe('UserService', () => {
     });
 
     it('should throw handled error for other database errors', async () => {
+      consoleErrorSpy.mockImplementation(() => {});
       mockOverrideTypes.mockResolvedValue({
         data: null,
         error: { code: '500', message: 'DB Error' }
@@ -135,6 +142,7 @@ describe('UserService', () => {
     });
 
     it('should throw handled error when update fails', async () => {
+      consoleErrorSpy.mockImplementation(() => {});
       mockEq.mockResolvedValue({
         error: { code: '42501', message: 'Permission denied', details: '' }
       });
@@ -157,6 +165,7 @@ describe('UserService', () => {
     });
 
     it('should throw handled error when auth update fails', async () => {
+      consoleErrorSpy.mockImplementation(() => {});
       mockUpdateUser.mockResolvedValue({
         error: new Error('Weak password')
       });
