@@ -27,16 +27,16 @@ import {
   DialogTitle
 } from '@/app/components/ui/dialog';
 
-import { useAuth } from '@/app/features/auth/hooks/use-auth';
 import { AvatarChangeForm } from '@/app/features/users/components/avatar-change-form';
 import { ChangePasswordForm } from '@/app/features/users/components/change-password-form';
 import { getUserNameInitials } from '@/app/features/users/utils';
 import { useSignOutMutation } from '@/app/features/auth/hooks/use-query';
+import { useUser } from '@/app/features/users/hooks/use-user';
 
 type DialogType = 'avatar' | 'password' | null;
 
 export function UserNav() {
-  const { user } = useAuth();
+  const { user } = useUser();
   const { mutateAsync } = useSignOutMutation();
   const navigate = useNavigate();
   const [dialogType, setDialogType] = useState<DialogType>(null);
